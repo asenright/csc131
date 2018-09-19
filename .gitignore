@@ -1,0 +1,15 @@
+#Compiled classes
+*.class
+
+#Log files
+*.log
+
+# BlueJ Files
+*.ctxt
+
+#Packages
+*.jar
+*.zip
+*.tar.gz
+*.rar
+hs_err_pid*
