@@ -8,6 +8,11 @@
 *	https://stackoverflow.com/questions/5864159/count-words-in-a-string-method
 */
 import java.io.*;
+import java.nio.*;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
+
+
 class wcFileNode {
 	boolean lineCount = true, charCount = true, wordCount = true;
 	int lines, chars, words;
@@ -21,14 +26,70 @@ class wcFileNode {
 			boolean lineCount, 
 			boolean charCount, 
 			boolean wordCount) {
-		
-			this.file = new File(filename);
-			this.charCount = charCount;
-			this.lineCount = lineCount;
-			this.wordCount = wordCount;
+			if (!(filename.contains("*") && filename.contains("/"))) { //No directories to traverse
+				//By default Java will traverse wildcarded filenames 
+				this.file = new File(filename);
+				this.charCount = charCount;
+				this.lineCount = lineCount;
+				this.wordCount = wordCount;
+				
+				if (!file.exists()) throw new IllegalArgumentException("No file found matching '" + filename + "'");
+			} else { //we must traverse wildcarded directories
 			
-			if (!file.exists()) throw new IllegalArgumentException("Filename invalid: " + filename);
-	}
+				
+				
+				String[] splitPath = filename.split("/");
+				String fileHandle = splitPath[splitPath.length - 1];
+				
+				// filename.subSequence(0, filename.length() - fileHandle.length());
+				String dir = "" + filename.subSequence(0, filename.length() - fileHandle.length() - 1);
+				String glob = "glob:"+dir;
+				final PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher(glob);
+				Path workingDirectory=Paths.get(".").toAbsolutePath();
+				
+				System.out.println("Searching "+ workingDirectory + " in folders named " + dir +" for all file(s) named " + fileHandle);
+				
+				try {
+					Files.walkFileTree(workingDirectory, new SimpleFileVisitor<Path>() {
+						
+						@Override
+						public FileVisitResult visitFile(Path path,
+								BasicFileAttributes attrs) throws IOException {
+							if (pathMatcher.matches(path)) {
+								System.out.println(path);
+							}
+							return FileVisitResult.CONTINUE;
+						}
+
+						@Override
+						public FileVisitResult visitFileFailed(Path file, IOException exc)
+								throws IOException {
+							return FileVisitResult.CONTINUE;
+						}
+					});
+				
+	
+				} catch (IOException e) {
+					System.out.println("I/O error while walking directories.");
+				}
+				
+				
+				
+		//		Path dir = FileSystems.getDefault().getPath(glob);
+			//	try {
+				//	DirectoryStream<Path> stream = Files.newDirectoryStream( dir, filename );
+		//for (Path path : stream) {
+			//		    System.out.println( "Got file " + path.getFileName() );
+			//		    wcFileNode tmp = new wcFileNode(path.getFileName().toString(), lineCount, charCount, wordCount);
+			//		    
+			//		}
+			//		stream.close();
+			//	} catch (IOException e) {
+			//		System.out.println("I/O error while parsing directories. Closing");
+			//	}
+				
+			}
+		}
 }
 
 public class wc {
@@ -60,8 +121,6 @@ public class wc {
 				System.out.println("Could not parse line 0");
 			} 
 			
-
-			int lineIndex = 0;
 			while (line != null) {
 				lastListItem.lines++;
 				lastListItem.chars += line.length();
@@ -71,10 +130,8 @@ public class wc {
 				try {
 					line = reader.readLine();
 				} catch (IOException err) {
-					System.out.println("Could not parse line" + lineIndex);
+					System.out.println("Could not parse line" + lastListItem.lines);
 				} 
-				
-				lineIndex++;
 			}
 			System.out.println("Metrics for " + lastListItem.file.getName() + ":");
 			if (lastListItem.lineCount) System.out.println(lastListItem.lines + " lines.");
