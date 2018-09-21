@@ -34,18 +34,14 @@ class wcFileNode {
 				this.wordCount = wordCount;
 				
 				if (!file.exists()) throw new IllegalArgumentException("No file found matching '" + filename + "'");
-			} else { //we must traverse wildcarded directories
-			
-				
-				
+			} else { //In this case we'll traverse wildcarded directories and add a wcFileNode for each directory searched
 				String[] splitPath = filename.split("/");
 				String fileHandle = splitPath[splitPath.length - 1];
 				
-				// filename.subSequence(0, filename.length() - fileHandle.length());
 				String dir = "" + filename.subSequence(0, filename.length() - fileHandle.length() - 1);
 				String glob = "glob:"+dir;
 				final PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher(glob);
-				Path workingDirectory=Paths.get(".").toAbsolutePath();
+				Path workingDirectory=Paths.get(".").toAbsolutePath().getParent();
 				
 				System.out.println("Searching "+ workingDirectory + " in folders named " + dir +" for all file(s) named " + fileHandle);
 				
@@ -93,12 +89,15 @@ class wcFileNode {
 }
 
 public class wc {
+	private static int totalLines;
+	private static int totalChars;
+	private static int totalWords;
 	public static void main(String[] args) {
 		if (args.length == 0) printUsage();		//No arguments? Print usage
 		wcFileNode listHead = null;				
 		listHead = populateList(args, listHead);//Populate list
-//		if (listHead == null) System.exit(0);	//Shouldn't need this but I don't want to get rid of it. I guess I'm sentimental.
 		printListMetrics(listHead);				//Pass in list to print item metrics.
+		formattedPrint(totalLines, totalWords, totalChars, "total"); //Print wc totals.
 	}
 	
 	private static void printListMetrics(wcFileNode listHead) {
@@ -123,8 +122,11 @@ public class wc {
 			
 			while (line != null) {
 				lastListItem.lines++;
+				totalLines++;
 				lastListItem.chars += line.length();
+				totalChars += line.length();
 				lastListItem.words += countWords(line);
+				totalWords += lastListItem.words;
 				
 				//Get next line; if null the loop breaks here
 				try {
@@ -133,11 +135,9 @@ public class wc {
 					System.out.println("Could not parse line" + lastListItem.lines);
 				} 
 			}
-			System.out.println("Metrics for " + lastListItem.file.getName() + ":");
-			if (lastListItem.lineCount) System.out.println(lastListItem.lines + " lines.");
-			if (lastListItem.charCount) System.out.println(lastListItem.chars + " characters.");
-			if (lastListItem.wordCount) System.out.println(lastListItem.words + " words.");
-			
+	
+			formattedPrint(lastListItem.lines, lastListItem.words, lastListItem.chars, lastListItem.file.getPath());
+	
 			lastListItem = lastListItem.next;
 			try {
 				reader.close();
@@ -145,6 +145,7 @@ public class wc {
 				System.out.println("Error closing buffered reader");
 				err.printStackTrace();
 			}
+			
 		}
 	}
 
@@ -177,7 +178,7 @@ public class wc {
 	
 	private static wcFileNode addToList(wcFileNode listHead, wcFileNode toAdd) {
 		wcFileNode lastListItem = listHead;
-		System.out.println("	Added item " + toAdd.file.getName() + " with flags: \n	Linecount:" + toAdd.lineCount + "\n	Charcount: " + toAdd.charCount + "\n	Wordcount: " + toAdd.wordCount );
+		//System.out.println("	Added item " + toAdd.file.getName() + " with flags: \n	Linecount:" + toAdd.lineCount + "\n	Charcount: " + toAdd.charCount + "\n	Wordcount: " + toAdd.wordCount );
 		//Insert tmp into linkedlist
 		if (listHead == null) { //First item- list head
 			listHead = toAdd;
@@ -234,5 +235,9 @@ public class wc {
 	//	wcFileNode tmp = new wcFileNode(new File(filename), countLines, countChars, countWords);
 	//	return tmp;
 	//}
+	
+	private static void formattedPrint(int lines, int words, int chars, String filename) {
+		System.out.printf("%8d %8d %8d %s%n", lines, words, chars, filename);
+	}
 	
 }
