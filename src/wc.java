@@ -2,9 +2,6 @@
 *	A java implementation of the unix 'wc' utility by Andrew Enright.
 *
 *	Usage: 'java wc <-l|-c|-w> filename
-*
-*	countWords() method provided by Michael Yaworski on StackOverflow.
-*	https://stackoverflow.com/questions/5864159/count-words-in-a-string-method
 */
 import java.io.*;
 import java.nio.file.*;
@@ -25,7 +22,7 @@ class wcFileNode {
 }
 
 public class wc {
-	private int totalLines, totalChars, totalWords;
+	private int totalLines, totalChars, totalWords, numItems;
 	private boolean countLines = false, countChars = false, countWords = false;
 	private wcFileNode listHead = null;	
 	
@@ -38,10 +35,11 @@ public class wc {
 	private void run(String[] args) {
 		listHead = populateList(args, listHead);				//Populate list
 		if (!countLines && !countWords && !countChars) 			
-			countLines = countWords = countChars = true;	//No argument specified? Print all metrics
+			countLines = countWords = countChars = true;		//No argument specified? Print all metrics
 		printListMetrics(listHead);								//Pass in list to print item metrics.
-		formattedPrint(		countLines ? totalLines : null, 
-							countLines ? totalWords : null, 
+		if (numItems > 1) formattedPrint(						//If more than 1 item, print total
+							countLines ? totalLines : null, 
+							countWords ? totalWords : null, 
 							countChars ? totalChars : null, 
 							"total");
 	}
@@ -67,12 +65,9 @@ public class wc {
 			} 
 			
 			while (line != null) {
-				lastListItem.lines++;
-				totalLines++;
-				lastListItem.chars += line.length();
-				totalChars += line.length();
-				lastListItem.words += countWords(line);
-				totalWords += lastListItem.words;
+				lastListItem.lines++;			
+				lastListItem.chars += line.length() + 2;  	//The Unix WC utility includes CR and LF characters in its count; String.length does not.
+				lastListItem.words += line.split("\\s").length; //Split on whitespace
 				
 				//Get next line; if null the loop breaks here
 				try {
@@ -81,6 +76,10 @@ public class wc {
 					System.out.println("Could not parse line" + lastListItem.lines);
 				} 
 			}
+	
+			totalWords += lastListItem.words;
+			totalChars += lastListItem.chars;
+			totalLines += lastListItem.lines;
 			
 			formattedPrint(	countLines ? lastListItem.lines : null, 
 							countWords ? lastListItem.words : null, 
@@ -124,6 +123,7 @@ public class wc {
 	}
 	
 	private wcFileNode addToList(wcFileNode listHead, wcFileNode toAdd) {
+		numItems++;
 		wcFileNode lastListItem = listHead;
 		//System.out.println("	Added item " + toAdd.file.getName() + " with flags: \n	Linecount:" + toAdd.lineCount + "\n	Charcount: " + toAdd.charCount + "\n	Wordcount: " + toAdd.wordCount );
 		//Insert tmp into linkedlist
@@ -140,30 +140,6 @@ public class wc {
 			lastListItem = lastListItem.next;
 		}
 		return listHead;
-	}
-		
-	//countWords() provided by Michael Yaworski on StackOverflow.
-	//https://stackoverflow.com/questions/5864159/count-words-in-a-string-method
-	private static int countWords(String line) {
-		int wordCount = 0;
-	    boolean word = false;
-	    int endOfLine = line.length() - 1;
-	    for (int i = 0; i < line.length(); i++) {
-	        // if the char is a letter, word = true.
-	        if (Character.isLetter(line.charAt(i)) && i != endOfLine) {
-	            word = true;
-	            // if char isn't a letter and there have been letters before,
-	            // counter goes up.
-	        } else if (!Character.isLetter(line.charAt(i)) && word) {
-	            wordCount++;
-	            word = false;
-	            // last word of String; if it doesn't end with a non letter, it
-	            // wouldn't count without this.
-	        } else if (Character.isLetter(line.charAt(i)) && i == endOfLine) {
-	            wordCount++;
-	        }
-	    }
-	    return wordCount;
 	}
 	
 	private static void printUsage() {
