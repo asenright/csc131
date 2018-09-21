@@ -2,7 +2,6 @@
 *	A java implementation of the unix 'wc' utility by Andrew Enright.
 *
 *	Usage: 'java wc <-l|-c|-w> filename
-*			Multiple files can be
 *
 *	countWords() method provided by Michael Yaworski on StackOverflow.
 *	https://stackoverflow.com/questions/5864159/count-words-in-a-string-method
@@ -13,93 +12,41 @@ import java.nio.file.attribute.BasicFileAttributes;
 
 
 class wcFileNode {
-	boolean lineCount = true, charCount = true, wordCount = true;
 	int lines, chars, words;
 	File file;
 	wcFileNode next = null;
 	
 	//The constructor for this object takes a filename.
 	//If there are wildcards or directories in that filename, the object will have a linked list of items attached.
-	public wcFileNode(
-			String filename, 
-			boolean lineCount, 
-			boolean charCount, 
-			boolean wordCount) {
-			if (!(filename.contains("*") && filename.contains("/"))) { //No directories to traverse
-				//By default Java will traverse wildcarded filenames 
-				this.file = new File(filename);
-				this.charCount = charCount;
-				this.lineCount = lineCount;
-				this.wordCount = wordCount;
-				
-				if (!file.exists()) throw new IllegalArgumentException("No file found matching '" + filename + "'");
-			} else { //In this case we'll traverse wildcarded directories and add a wcFileNode for each directory searched
-				String[] splitPath = filename.split("/");
-				String fileHandle = splitPath[splitPath.length - 1];
-				
-				String dir = "" + filename.subSequence(0, filename.length() - fileHandle.length() - 1);
-				String glob = "glob:"+dir;
-				final PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher(glob);
-				Path workingDirectory=Paths.get(".").toAbsolutePath().getParent();
-				
-				System.out.println("Searching "+ workingDirectory + " in folders named " + dir +" for all file(s) named " + fileHandle);
-				
-				try {
-					Files.walkFileTree(workingDirectory, new SimpleFileVisitor<Path>() {
-						
-						@Override
-						public FileVisitResult visitFile(Path path,
-								BasicFileAttributes attrs) throws IOException {
-							if (pathMatcher.matches(path)) {
-								System.out.println(path);
-							}
-							return FileVisitResult.CONTINUE;
-						}
-
-						@Override
-						public FileVisitResult visitFileFailed(Path file, IOException exc)
-								throws IOException {
-							return FileVisitResult.CONTINUE;
-						}
-					});
-				
-	
-				} catch (IOException e) {
-					System.out.println("I/O error while walking directories.");
-				}
-				
-				
-				
-		//		Path dir = FileSystems.getDefault().getPath(glob);
-			//	try {
-				//	DirectoryStream<Path> stream = Files.newDirectoryStream( dir, filename );
-		//for (Path path : stream) {
-			//		    System.out.println( "Got file " + path.getFileName() );
-			//		    wcFileNode tmp = new wcFileNode(path.getFileName().toString(), lineCount, charCount, wordCount);
-			//		    
-			//		}
-			//		stream.close();
-			//	} catch (IOException e) {
-			//		System.out.println("I/O error while parsing directories. Closing");
-			//	}
-				
-			}
-		}
+	public wcFileNode(String filename) {
+		this.file = new File(filename);
+		if (!file.exists()) throw new IllegalArgumentException("No file found matching '" + filename + "'");
+	}
 }
 
 public class wc {
-	private static int totalLines;
-	private static int totalChars;
-	private static int totalWords;
+	private int totalLines, totalChars, totalWords;
+	private boolean countLines = false, countChars = false, countWords = false;
+	private wcFileNode listHead = null;	
+	
 	public static void main(String[] args) {
-		if (args.length == 0) printUsage();		//No arguments? Print usage
-		wcFileNode listHead = null;				
-		listHead = populateList(args, listHead);//Populate list
-		printListMetrics(listHead);				//Pass in list to print item metrics.
-		formattedPrint(totalLines, totalWords, totalChars, "total"); //Print wc totals.
+		if (args.length == 0) printUsage();						//No arguments? Print usage
+		wc wordCounterInstance = new wc();
+		wordCounterInstance.run(args);
 	}
 	
-	private static void printListMetrics(wcFileNode listHead) {
+	private void run(String[] args) {
+		listHead = populateList(args, listHead);				//Populate list
+		if (!countLines && !countWords && !countChars) 			
+			countLines = countWords = countChars = true;	//No argument specified? Print all metrics
+		printListMetrics(listHead);								//Pass in list to print item metrics.
+		formattedPrint(		countLines ? totalLines : null, 
+							countLines ? totalWords : null, 
+							countChars ? totalChars : null, 
+							"total");
+	}
+	
+	private void printListMetrics(wcFileNode listHead) {
 		wcFileNode lastListItem = listHead;
 		
 		while (lastListItem != null) {
@@ -134,8 +81,11 @@ public class wc {
 					System.out.println("Could not parse line" + lastListItem.lines);
 				} 
 			}
-	
-			formattedPrint(lastListItem.lines, lastListItem.words, lastListItem.chars, lastListItem.file.getPath());
+			
+			formattedPrint(	countLines ? lastListItem.lines : null, 
+							countWords ? lastListItem.words : null, 
+							countChars ? lastListItem.chars : null, 
+							lastListItem.file.getPath());
 	
 			lastListItem = lastListItem.next;
 			try {
@@ -148,7 +98,7 @@ public class wc {
 		}
 	}
 
-	private static wcFileNode populateList(String[] args, wcFileNode listHead) {
+	private wcFileNode populateList(String[] args, wcFileNode listHead) {
 		//Step 1: Populate the wcFile list with files
 		for (int i = 0; i < args.length; i++) {
 		//	wcFileNode tmp = new wcFileNode();
@@ -157,16 +107,14 @@ public class wc {
 			//If it is neither the program should crash.
 						
 			if (args[i].equals("-l") || args[i].equals("-c") || args[i].equals("-w")) { 
-				if (i + 1 > args.length || args[i+1] == null) printUsage();
-				//The filename might contain wildcards, which means it's actually many filenames.
-				wcFileNode tmp = new wcFileNode(args[i + 1], args[i].equals("-l"), args[i].equals("-c"), args[i].equals("-w") );
-			
-				listHead = addToList(listHead, tmp);
-				i++; //skip an index ahead, since we already have the filename
+				if (i + 1 > args.length || args[i+1] == null) printUsage(); //The actual WC utility crashes if you do this!
+				countLines = args[i].equals("-l") ? true : countLines;
+				countWords = args[i].equals("-w") ? true : countWords;
+				countChars = args[i].equals("-c") ? true : countChars;
 			}
 			else {
 				//Not a parsable command; assume it's a filename .
-				wcFileNode tmp = new wcFileNode(args[i], true, true, true);
+				wcFileNode tmp = new wcFileNode(args[i]);
 				listHead = addToList(listHead, tmp);
 			}
 			
@@ -175,7 +123,7 @@ public class wc {
 		return listHead;
 	}
 	
-	private static wcFileNode addToList(wcFileNode listHead, wcFileNode toAdd) {
+	private wcFileNode addToList(wcFileNode listHead, wcFileNode toAdd) {
 		wcFileNode lastListItem = listHead;
 		//System.out.println("	Added item " + toAdd.file.getName() + " with flags: \n	Linecount:" + toAdd.lineCount + "\n	Charcount: " + toAdd.charCount + "\n	Wordcount: " + toAdd.wordCount );
 		//Insert tmp into linkedlist
@@ -224,7 +172,7 @@ public class wc {
 				+ "\n'wc -c <filename>' will print the character count"
 				+ "\n'wc -w <filename>' will print the word count"
 				+ "wc <filename> will print all of the above"
-				+ "\nMultiple files each get their own arguments; for example, 'wc -l Hamlet.txt Romeo.txt' will give you all a line count for Hamlet.txt and all metrics for Romeo.txt.");
+				);
 			System.exit(0);
 	}
 	
@@ -235,8 +183,13 @@ public class wc {
 	//	return tmp;
 	//}
 	
-	private static void formattedPrint(int lines, int words, int chars, String filename) {
-		System.out.printf("%8d %8d %8d %s%n", lines, words, chars, filename);
+	private static void formattedPrint(Integer lines, Integer words, Integer chars, String filename) {
+		//System.out.printf("%8d %8d %8d %s%n", lines, words, chars, filename);
+		if (lines != null) System.out.printf("%8d", lines);
+		if (words != null) System.out.printf("%8d", words);
+		if (chars != null) System.out.printf("%8d", chars);
+		System.out.printf(" %s%n", filename);
+		
 	}
 	
 }
