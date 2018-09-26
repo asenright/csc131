@@ -9,7 +9,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 
 
 class wcFileNode {
-	int lines, chars, words;
+	int lines, chars, words, linesOfCode, linesOfComment;
 	File file;
 	wcFileNode next = null;
 	
@@ -22,8 +22,9 @@ class wcFileNode {
 }
 
 public class wc {
+	private static final int COLUMN_WIDTH = 10;
 	private int totalLines, totalChars, totalWords, numItems;
-	private boolean countLines = false, countChars = false, countWords = false;
+	private boolean countLines = false, countChars = false, countWords = false, countCode = false, countComments = false;
 	private wcFileNode listHead = null;	
 	
 	public static void main(String[] args) {
@@ -34,8 +35,9 @@ public class wc {
 	
 	private void run(String[] args) {
 		listHead = populateList(args, listHead);				//Populate list
-		if (!countLines && !countWords && !countChars) 			
-			countLines = countWords = countChars = true;		//No argument specified? Print all metrics
+		if (!countLines && !countWords && !countChars && !countCode && !countComments) 			
+			countLines = countWords = countChars = countCode = countLines = true;		//No argument specified? Print all metrics
+		printHeader();
 		printListMetrics(listHead);								//Pass in list to print item metrics.
 		if (numItems > 1) formattedPrint(						//If more than 1 item, print total
 							countLines ? totalLines : null, 
@@ -100,8 +102,6 @@ public class wc {
 	private wcFileNode populateList(String[] args, wcFileNode listHead) {
 		//Step 1: Populate the wcFile list with files
 		for (int i = 0; i < args.length; i++) {
-		//	wcFileNode tmp = new wcFileNode();
-		//	tmp.lineCount = tmp.wordCount = tmp.charCount = true;
 			//Parse current arg. Is it a command -l, -c, -w; or is it a filename?
 			//If it is neither the program should crash.
 						
@@ -112,12 +112,11 @@ public class wc {
 				countChars = args[i].equals("-c") ? true : countChars;
 			}
 			else {
-				//Not a parsable command; assume it's a filename .
+				//Not a parsable command; assume it's a filename
 				wcFileNode tmp = new wcFileNode(args[i]);
+				if (!tmp.file.exists()) printUsage();
 				listHead = addToList(listHead, tmp);
-			}
-			
-			
+			}	
 		}
 		return listHead;
 	}
@@ -125,16 +124,16 @@ public class wc {
 	private wcFileNode addToList(wcFileNode listHead, wcFileNode toAdd) {
 		numItems++;
 		wcFileNode lastListItem = listHead;
-		//System.out.println("	Added item " + toAdd.file.getName() + " with flags: \n	Linecount:" + toAdd.lineCount + "\n	Charcount: " + toAdd.charCount + "\n	Wordcount: " + toAdd.wordCount );
+	
 		//Insert tmp into linkedlist
-		if (listHead == null) { //First item- list head
+		if (listHead == null) { 			//First item? It's now list head
 			listHead = toAdd;
 			lastListItem = listHead;
 		}
-		else if (listHead.next == null){ //Second item - listhead.next
+		else if (listHead.next == null){ 	//Second item? listhead.next
 			listHead.next = toAdd;
 			lastListItem = listHead.next;		
-		} else { //nth item- just hook it into end of linked list and move lastListItem pointer up
+		} else { 							//nth item- just hook it into end of linked list and move lastListItem reference up
 			while (lastListItem.next != null) lastListItem = lastListItem.next;
 			lastListItem.next = toAdd;
 			lastListItem = lastListItem.next;
@@ -143,29 +142,35 @@ public class wc {
 	}
 	
 	private static void printUsage() {
-		System.out.println("Usage: 'wc <-l|-c|-w> filename1 <-l|-c|-w> filename2 ... <-l|-c|-w> filenameN'"
-				+ "\n'wc -l <filename>' will print the line count of a file"
+		System.out.println("Usage: 'wc <-l|-c|-w> filename1 filename2 ... filenameN'"
+				+ "\n'wc -l <filename>' will print the line count of all specified files"
 				+ "\n'wc -c <filename>' will print the character count"
 				+ "\n'wc -w <filename>' will print the word count"
-				+ "wc <filename> will print all of the above"
+				+ "\n'wc <filename>' will print all of the above"
+				+ "\n'wc -l -c filename1 filename2' will print line and char counts for filename1 and filename2" 
 				);
 			System.exit(0);
 	}
 	
-	//Returns the linked sublist of args. 
-	//This might be a linked list because there may be multiple files specified due to wildcards.
-	//private static wcFileNode populateSubList(String filename, boolean countWords, boolean countLines, boolean countChars) {
-	//	wcFileNode tmp = new wcFileNode(new File(filename), countLines, countChars, countWords);
-	//	return tmp;
-	//}
-	
-	private static void formattedPrint(Integer lines, Integer words, Integer chars, String filename) {
-		//System.out.printf("%8d %8d %8d %s%n", lines, words, chars, filename);
-		if (lines != null) System.out.printf("%8d", lines);
-		if (words != null) System.out.printf("%8d", words);
-		if (chars != null) System.out.printf("%8d", chars);
-		System.out.printf(" %s%n", filename);
+	private void printHeader() {
+		String format = "%"+COLUMN_WIDTH+"s";
+		if (countLines) System.out.printf(format, "lines");
+		if (countWords) System.out.printf(format, "words");
+		if (countWords) System.out.printf(format, "chars");
+		if (countCode) System.out.printf(format, "sourcelines");
+		if (countComments) System.out.printf(format, "commentlines");
 		
+		System.out.printf(format, "filename\n");
+	}
+	
+	private static void formattedPrint(Integer lines, Integer words, Integer chars, Integer linesCode, Integer linesComment, String filename) {
+		String format = "%"+COLUMN_WIDTH+"d";
+		if (lines != null) System.out.printf(format, lines);
+		if (words != null) System.out.printf(format, words);
+		if (chars != null) System.out.printf(format, chars);
+		if (linesCode != null) System.out.printf(format, linesCode);
+		if (linesComment != null) System.out.printf(format, linesComment);
+		System.out.printf(" %s%n", filename);
 	}
 	
 }
