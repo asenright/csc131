@@ -22,8 +22,8 @@ class wcFileNode {
 }
 
 public class wc {
-	private static final int COLUMN_WIDTH = 10;
-	private int totalLines, totalChars, totalWords, numItems;
+	private static final int COLUMN_WIDTH = 14;
+	private int totalLines, totalChars, totalWords, totalCode, totalComments, numItems;
 	private boolean countLines = false, countChars = false, countWords = false, countCode = false, countComments = false;
 	private wcFileNode listHead = null;	
 	
@@ -36,13 +36,15 @@ public class wc {
 	private void run(String[] args) {
 		listHead = populateList(args, listHead);				//Populate list
 		if (!countLines && !countWords && !countChars && !countCode && !countComments) 			
-			countLines = countWords = countChars = countCode = countLines = true;		//No argument specified? Print all metrics
+			countLines = countWords = countChars = countCode = countComments = true;		//No argument specified? Print all metrics
 		printHeader();
 		printListMetrics(listHead);								//Pass in list to print item metrics.
 		if (numItems > 1) formattedPrint(						//If more than 1 item, print total
-							countLines ? totalLines : null, 
-							countWords ? totalWords : null, 
-							countChars ? totalChars : null, 
+							countLines 	? totalLines : null, 
+							countWords 	? totalWords : null, 
+							countChars 	? totalChars : null, 
+							countCode 	? totalCode : null,
+							countComments ? totalComments : null,
 							"total");
 	}
 	
@@ -86,6 +88,8 @@ public class wc {
 			formattedPrint(	countLines ? lastListItem.lines : null, 
 							countWords ? lastListItem.words : null, 
 							countChars ? lastListItem.chars : null, 
+							countCode ? lastListItem.linesOfCode : null,
+							countComments ? lastListItem.linesOfComment : null,
 							lastListItem.file.getPath());
 	
 			lastListItem = lastListItem.next;
@@ -157,10 +161,10 @@ public class wc {
 		if (countLines) System.out.printf(format, "lines");
 		if (countWords) System.out.printf(format, "words");
 		if (countWords) System.out.printf(format, "chars");
-		if (countCode) System.out.printf(format, "sourcelines");
+		if (countCode) 	System.out.printf(format, "sourcelines");
 		if (countComments) System.out.printf(format, "commentlines");
 		
-		System.out.printf(format, "filename\n");
+		System.out.printf(" %-"+COLUMN_WIDTH+"s%n", "filename");
 	}
 	
 	private static void formattedPrint(Integer lines, Integer words, Integer chars, Integer linesCode, Integer linesComment, String filename) {
