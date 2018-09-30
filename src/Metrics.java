@@ -21,38 +21,31 @@ class wcFileNode {
 	}
 }
 
-public class wc {
+public class Metrics {
 	private static final int COLUMN_WIDTH = 14;
 	private int totalLines, totalChars, totalWords, totalCode, totalComments, numItems;
 	private boolean countLines = false, countChars = false, countWords = false, countCode = false, countComments = false;
 	private wcFileNode listHead = null;	
 	
 	public static void main(String[] args) {
-		if (args.length == 0) printUsage();						//No arguments? Print usage
-		wc wordCounterInstance = new wc();
+		if (args.length == 0) printUsage();						
+		Metrics wordCounterInstance = new Metrics();
 		wordCounterInstance.run(args);
 	}
 	
-	private void run(String[] args) {
-		listHead = populateList(args, listHead);				//Populate list
+	void run(String[] args) {
+		listHead = populateList(args, listHead);				
 		if (!countLines && !countWords && !countChars && !countCode && !countComments) 			
 			countLines = countWords = countChars = countCode = countComments = true;		//No argument specified? Print all metrics
 		printHeader();
-		printListMetrics(listHead);								//Pass in list to print item metrics.
-		if (numItems > 1) formattedPrint(						//If more than 1 item, print total
-							countLines 	? totalLines : null, 
-							countWords 	? totalWords : null, 
-							countChars 	? totalChars : null, 
-							countCode 	? totalCode : null,
-							countComments ? totalComments : null,
-							"total");
+		printListMetrics(listHead);								
+		if (numItems > 1) formattedPrint(totalLines, totalWords, totalChars, totalCode, totalComments, "total");
 	}
 	
 	private void printListMetrics(wcFileNode listHead) {
 		wcFileNode lastListItem = listHead;
 		
 		while (lastListItem != null) {
-			//System.out.println("Starting item " + lastListItem.file.getName());
 			BufferedReader reader = null;
 			try {
 				reader = new BufferedReader(new FileReader(lastListItem.file));
@@ -71,7 +64,7 @@ public class wc {
 			while (line != null) {
 				lastListItem.lines++;			
 				lastListItem.chars += line.length() + 2;  	//The Unix WC utility includes CR and LF characters in its count; String.length does not.
-				lastListItem.words += line.split("\\s").length; //Split on whitespace
+				lastListItem.words += line.split("\\s+").length; 
 				
 				//Get next line; if null the loop breaks here
 				try {
@@ -85,11 +78,11 @@ public class wc {
 			totalChars += lastListItem.chars;
 			totalLines += lastListItem.lines;
 			
-			formattedPrint(	countLines ? lastListItem.lines : null, 
-							countWords ? lastListItem.words : null, 
-							countChars ? lastListItem.chars : null, 
-							countCode ? lastListItem.linesOfCode : null,
-							countComments ? lastListItem.linesOfComment : null,
+			formattedPrint(	lastListItem.lines, 
+							lastListItem.words, 
+							lastListItem.chars, 
+							lastListItem.linesOfCode,
+							lastListItem.linesOfComment,
 							lastListItem.file.getPath());
 	
 			lastListItem = lastListItem.next;
@@ -167,13 +160,14 @@ public class wc {
 		System.out.printf(" %-"+COLUMN_WIDTH+"s%n", "filename");
 	}
 	
-	private static void formattedPrint(Integer lines, Integer words, Integer chars, Integer linesCode, Integer linesComment, String filename) {
+	private void formattedPrint(Integer lines, Integer words, Integer chars, Integer linesCode, Integer linesComment, String filename) {
 		String format = "%"+COLUMN_WIDTH+"d";
-		if (lines != null) System.out.printf(format, lines);
-		if (words != null) System.out.printf(format, words);
-		if (chars != null) System.out.printf(format, chars);
-		if (linesCode != null) System.out.printf(format, linesCode);
-		if (linesComment != null) System.out.printf(format, linesComment);
+		if (countLines) System.out.printf(format, lines);
+		if (countWords) System.out.printf(format, words);
+		if (countChars) System.out.printf(format, chars);
+		if (countCode) System.out.printf(format, linesCode);
+		if (countComments) System.out.printf(format, linesComment);
+		
 		System.out.printf(" %s%n", filename);
 	}
 	
