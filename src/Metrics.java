@@ -1,49 +1,84 @@
-/*	wc.java
+/*	Metrics.java
+
 *	A java implementation of the unix 'wc' utility by Andrew Enright.
 *
 *	Usage: 'java wc <-l|-c|-w> filename
+*
+*  Credit to technicalkeeda.com for getFileExtension()	
 */
 import java.io.*;
+
+import java.util.LinkedList;
+import java.util.List;
+
+import picocli.CommandLine;
 import picocli.CommandLine.*;
 
-class wcFileNode {
-	int lines, chars, words, linesOfCode, linesOfComment;
-	File file;
-	wcFileNode next = null;
-	
-	//The constructor for this object takes a filename.
-	//If there are wildcards or directories in that filename, the object will have a linked list of items attached.
-	public wcFileNode(String filename) {
-		this.file = new File(filename);
-		if (!file.exists()) throw new IllegalArgumentException("No file found matching '" + filename + "'");
-	}
-}
 
-public class Metrics {
+@Command(description="Prints metrics of the given file to STDOUT.",	name="Metrics")
+public class Metrics implements Runnable{
+	private static void printUsage() {
+		System.out.println("Usage: 'java Metrics <-l|-c|-w> filename1 filename2 ... filenameN'"
+				+ "\n'java Metrics  -l <filename>' will print the line count of all specified files"
+				+ "\n'java Metrics  -c <filename>' will print the character count"
+				+ "\n'java Metrics  -w <filename>' will print the word count"
+				+ "\n'java Metrics  <filename>' will print all of the above"
+				+ "\n'java Metrics  -l -c filename1 filename2' will print line and char counts for filename1 and filename2" 
+				);
+			System.exit(0);
+	}
+	
+	@Option(description = "Count number of lines", names = { "-l" }, paramLabel="countLines") 
+	boolean countLines;
+	
+	@Option(description = "Count number of words", names = { "-w" }, paramLabel="countWords") 
+	boolean countWords;
+	
+	@Option(description = "Count number of chars", names = { "-c" }, paramLabel="countChars")
+	boolean countChars;
+	
+	@Option(description = "Count lines of source code", names = { "-s" }, paramLabel="countCode")
+	boolean countCode;
+
+	@Option(description = "Count lines of comment", names = { "-C" }, paramLabel="countComment")
+	boolean countComments;
+	
+	@Parameters
+	LinkedList<File> files;
+		
 	private static final int COLUMN_WIDTH = 14;
 	private int totalLines, totalChars, totalWords, totalCode, totalComments, numItems;
-	private boolean countLines = false, countChars = false, countWords = false, countCode = false, countComments = false;
-	private wcFileNode listHead = null;	
+
+	private LinkedList<wcFileNode> listHead = null;	
 	
 	public static void main(String[] args) {
-		if (args.length == 0) printUsage();						
+		if (args.length == 0) printUsage();		
 		Metrics wordCounterInstance = new Metrics();
-		wordCounterInstance.run(args);
+		CommandLine.run(wordCounterInstance, args);
 	}
 	
-	void run(String[] args) {
-		listHead = populateList(args, listHead);				
+	public void run() {		
+		listHead = new LinkedList<wcFileNode>();
+		
+		try { populateList(files, listHead); }
+		catch (Exception e) { 
+			System.out.println("Error encountered populating list : " + e.getMessage());
+			e.printStackTrace();
+			System.exit(0);
+			}
+		
+		//No argument specified? Print all metrics
 		if (!countLines && !countWords && !countChars && !countCode && !countComments) 			
-			countLines = countWords = countChars = countCode = countComments = true;		//No argument specified? Print all metrics
+			countLines = countWords = countChars = countCode = countComments = true;		
+		
 		printHeader();
 		printListMetrics(listHead);								
-		if (numItems > 1) formattedPrint(totalLines, totalWords, totalChars, totalCode, totalComments, "total");
+		if (numItems > 1) 
+			formattedPrint(totalLines, totalWords, totalChars, totalCode, totalComments, "total");
 	}
 	
-	private void printListMetrics(wcFileNode listHead) {
-		wcFileNode lastListItem = listHead;
-		
-		while (lastListItem != null) {
+	private void printListMetrics(LinkedList<wcFileNode> listHead) {
+		for (wcFileNode lastListItem : listHead) {
 			BufferedReader reader = null;
 			try {
 				reader = new BufferedReader(new FileReader(lastListItem.file));
@@ -52,17 +87,50 @@ public class Metrics {
 				System.exit(1);
 			}
 			String line = null;
-			
+			String ext = getFileExtension(lastListItem.file);
+
 			try {
 				line = reader.readLine();
 			} catch (IOException err) {
 				System.out.println("Could not parse line 0");
 			} 
+			boolean currentlyBlockComment = false;
 			
 			while (line != null) {
 				lastListItem.lines++;			
 				lastListItem.chars += line.length() + 2;  	//The Unix WC utility includes CR and LF characters in its count; String.length does not.
 				lastListItem.words += line.split("\\s+").length; 
+				
+				switch (ext) {
+					case ".c": //handle c code
+						if (line.contains("/*") && line.contains("*/")) lastListItem.linesOfComment++; 
+							else if (line.contains("/*")) currentlyBlockComment = true;
+							else if (line.contains("*/")) currentlyBlockComment = false;
+							else if (line.contains("//") && !currentlyBlockComment) lastListItem.linesOfComment++;
+						
+						if (currentlyBlockComment) lastListItem.linesOfComment++;
+				
+						if (line.split("//").length > 1) //there are contents on the line besides comment
+							lastListItem.linesOfCode++;
+						else if (!line.trim().isEmpty()) lastListItem.linesOfCode++;
+						
+						break;
+					case ".h": //handle h code
+						break;
+					case ".java": //handle Java code
+						if (line.contains("/*") && line.contains("*/")) lastListItem.linesOfComment++; 
+							else if (line.contains("/*")) currentlyBlockComment = true;
+							else if (line.contains("*/")) currentlyBlockComment = false;
+							else if (line.contains("//") && !currentlyBlockComment) lastListItem.linesOfComment++;
+							
+						if (currentlyBlockComment) lastListItem.linesOfComment++;
+				
+						if (line.split("//").length > 1) //there are contents on the line besides comment
+							lastListItem.linesOfCode++;
+						else if (!line.trim().isEmpty()) lastListItem.linesOfCode++;
+						
+						break;
+				}
 				
 				//Get next line; if null the loop breaks here
 				try {
@@ -75,6 +143,8 @@ public class Metrics {
 			totalWords += lastListItem.words;
 			totalChars += lastListItem.chars;
 			totalLines += lastListItem.lines;
+			totalCode += lastListItem.linesOfCode;
+			totalComments += lastListItem.linesOfComment;
 			
 			formattedPrint(	lastListItem.lines, 
 							lastListItem.words, 
@@ -82,8 +152,7 @@ public class Metrics {
 							lastListItem.linesOfCode,
 							lastListItem.linesOfComment,
 							lastListItem.file.getPath());
-	
-			lastListItem = lastListItem.next;
+			
 			try {
 				reader.close();
 			} catch (IOException err) {
@@ -93,60 +162,32 @@ public class Metrics {
 			
 		}
 	}
+	
+	//Credit to technicalkeeda.com for getFileExtension()
 
-	private wcFileNode populateList(String[] args, wcFileNode listHead) {
-		//Step 1: Populate the wcFile list with files
-		for (int i = 0; i < args.length; i++) {
-			//Parse current arg. Is it a command -l, -c, -w; or is it a filename?
-			//If it is neither the program should crash.
-						
-			if (args[i].equals("-l") || args[i].equals("-c") || args[i].equals("-w")) { 
-				if (i + 1 > args.length || args[i+1] == null) printUsage(); //The actual WC utility crashes if you do this!
-				countLines = args[i].equals("-l") ? true : countLines;
-				countWords = args[i].equals("-w") ? true : countWords;
-				countChars = args[i].equals("-c") ? true : countChars;
-			}
-			else {
-				//Not a parsable command; assume it's a filename
-				wcFileNode tmp = new wcFileNode(args[i]);
-				if (!tmp.file.exists()) printUsage();
-				listHead = addToList(listHead, tmp);
+	private String getFileExtension(File file) {
+		String extension = "";
+		try {
+		if (file != null && file.exists()) {
+			String name =file.getName();
+			extension = name.substring(name.lastIndexOf("."));
+		}
+		return extension;
+		} catch (Exception e) {
+			extension = "";
+		}
+		return extension;
+	}
+
+	private void populateList(List<File> files, LinkedList<wcFileNode> listHead) throws FileNotFoundException {
+		for (File current : files) {
+				if (!current.exists()) throw new FileNotFoundException("Could not find file " + current.getName());
+				wcFileNode tmp = new wcFileNode(current);
+				listHead.add(tmp);
 			}	
-		}
-		return listHead;
 	}
 	
-	private wcFileNode addToList(wcFileNode listHead, wcFileNode toAdd) {
-		numItems++;
-		wcFileNode lastListItem = listHead;
-	
-		//Insert tmp into linkedlist
-		if (listHead == null) { 			//First item? It's now list head
-			listHead = toAdd;
-			lastListItem = listHead;
-		}
-		else if (listHead.next == null){ 	//Second item? listhead.next
-			listHead.next = toAdd;
-			lastListItem = listHead.next;		
-		} else { 							//nth item- just hook it into end of linked list and move lastListItem reference up
-			while (lastListItem.next != null) lastListItem = lastListItem.next;
-			lastListItem.next = toAdd;
-			lastListItem = lastListItem.next;
-		}
-		return listHead;
-	}
-	
-	private static void printUsage() {
-		System.out.println("Usage: 'wc <-l|-c|-w> filename1 filename2 ... filenameN'"
-				+ "\n'wc -l <filename>' will print the line count of all specified files"
-				+ "\n'wc -c <filename>' will print the character count"
-				+ "\n'wc -w <filename>' will print the word count"
-				+ "\n'wc <filename>' will print all of the above"
-				+ "\n'wc -l -c filename1 filename2' will print line and char counts for filename1 and filename2" 
-				);
-			System.exit(0);
-	}
-	
+
 	private void printHeader() {
 		String format = "%"+COLUMN_WIDTH+"s";
 		if (countLines) System.out.printf(format, "lines");
@@ -169,4 +210,17 @@ public class Metrics {
 		System.out.printf(" %s%n", filename);
 	}
 	
+
+class wcFileNode {
+	int lines, chars, words, linesOfCode, linesOfComment;
+	File file;
+	wcFileNode next = null;
+	
+	public wcFileNode(File toCount) {
+		this.file = toCount;
+		if (!file.exists()) throw new IllegalArgumentException("No file found matching '" + file.getName() + "'");
+	}
+}
+
+
 }
