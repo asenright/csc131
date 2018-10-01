@@ -2,7 +2,7 @@
 
 *	A java implementation of the unix 'wc' utility by Andrew Enright.
 *
-*	Usage: 'java wc <-l|-c|-w> filename
+*	Usage: 'java wc <-l|-c|-w|-s|-C> filename
 *
 *  Credit to technicalkeeda.com for getFileExtension()	
 */
@@ -94,7 +94,6 @@ public class Metrics implements Runnable{
 			}
 			String line = null;
 			String ext = getFileExtension(lastListItem.file);
-			System.out.println("Parsing one of those tricky " + ext + " files!");
 			try {
 				line = reader.readLine();
 			} catch (IOException err) {
@@ -110,15 +109,20 @@ public class Metrics implements Runnable{
 				if (ext.equals(".c") || ext.equals(".java")) {
 						
 						if (line.contains("/*") && line.contains("*/")) lastListItem.linesOfComment++; 
-							else if (line.contains("/*")) currentlyBlockComment = true;
-							else if (line.contains("*/")) currentlyBlockComment = false;
-							else if (line.contains("//") && !currentlyBlockComment) lastListItem.linesOfComment++;
-						
-						if (currentlyBlockComment) lastListItem.linesOfComment++;
+						else if (line.contains("/*")) 	{
+							currentlyBlockComment = true;
+							lastListItem.linesOfComment++;
+						}
+						else if (line.contains("*/")) {
+							currentlyBlockComment = false;
+							lastListItem.linesOfComment++;
+						}
+						else if (line.contains("//") && !currentlyBlockComment) lastListItem.linesOfComment++;
+						else if (currentlyBlockComment) lastListItem.linesOfComment++;
 				
-						if (line.split("//").length > 1) //there are contents on the line besides comment
+						if (line.split("//").length > 1 && !currentlyBlockComment) //there are contents on the line besides comment
 							lastListItem.linesOfCode++;
-						else if (!line.trim().isEmpty()) lastListItem.linesOfCode++;
+						else if (!line.trim().isEmpty() && !currentlyBlockComment) lastListItem.linesOfCode++;
 				} else if (ext == ".h") {
 					
 				}
