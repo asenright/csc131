@@ -4,9 +4,7 @@
 *	Usage: 'java wc <-l|-c|-w> filename
 */
 import java.io.*;
-import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
-
+import picocli.CommandLine.*;
 
 class wcFileNode {
 	int lines, chars, words, linesOfCode, linesOfComment;
