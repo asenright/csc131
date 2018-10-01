@@ -93,21 +93,29 @@ public class Metrics implements Runnable{
 				System.exit(1);
 			}
 			String line = null;
-			String ext = getFileExtension(lastListItem.file);
+			
 			try {
 				line = reader.readLine();
 			} catch (IOException err) {
 				System.out.println("Could not parse line 0");
 			} 
 			boolean currentlyBlockComment = false;
-			
+			String ext = "";
 			while (line != null) {
+				try {
+					//Java kindly handles multiple files for us; this means we need to check the extension every line
+					// if we want to be able to run on multiple file types with same wildcarded name
+					// i.e. test* will run code analysis on test.c but not test.txt
+					ext = getFileExtension(lastListItem.file.getCanonicalFile()); 
+				} catch (Exception e) {
+					System.out.println("Error getting canonical file name");
+					e.printStackTrace();
+				}
 				lastListItem.lines++;			
 				lastListItem.chars += line.length() + 2;  	//The Unix WC utility includes CR and LF characters in its count; String.length does not.
 				lastListItem.words += line.split("\\s+").length; 
 				
-				if (ext.equals(".c") || ext.equals(".java")) {
-						
+				if ((ext.equals(".c") || ext.equals(".java")) && !line.trim().equals("")) {
 						if (line.contains("/*") && line.contains("*/")) lastListItem.linesOfComment++; 
 						else if (line.contains("/*")) 	{
 							currentlyBlockComment = true;
@@ -122,8 +130,11 @@ public class Metrics implements Runnable{
 				
 						if (line.split("//").length > 1 && !currentlyBlockComment) //there are contents on the line besides comment
 							lastListItem.linesOfCode++;
-						else if (!line.trim().isEmpty() && !currentlyBlockComment) lastListItem.linesOfCode++;
+						else if (!line.contains("*/") && !line.contains("/*") && !currentlyBlockComment) lastListItem.linesOfCode++;
+						else if (line.contains("/*") && !(line.substring(0, line.indexOf("/*")).trim().equals("//s+"))) lastListItem.linesOfCode++;	//code, then /*comment*/
+						//else if (line.contains("*/") && !line.substring(line.indexOf("*/"), line.length() - 1).equals("//s+")) lastListItem.linesOfCode++;	//this one's /*comment*/ then code
 				} else if (ext == ".h") {
+					
 					
 				}
 				
