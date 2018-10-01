@@ -72,12 +72,18 @@ public class Metrics implements Runnable{
 			countLines = countWords = countChars = countCode = countComments = true;		
 		
 		printHeader();
-		printListMetrics(listHead);								
+		gatherFileMetrics(listHead);		
+		for (wcFileNode lastListItem : listHead) formattedPrint(	lastListItem.lines, 
+				lastListItem.words, 
+				lastListItem.chars, 
+				lastListItem.linesOfCode,
+				lastListItem.linesOfComment,
+				lastListItem.file.getPath());
 		if (numItems > 1) 
 			formattedPrint(totalLines, totalWords, totalChars, totalCode, totalComments, "total");
 	}
 	
-	private void printListMetrics(LinkedList<wcFileNode> listHead) {
+	private void gatherFileMetrics(LinkedList<wcFileNode> listHead) {
 		for (wcFileNode lastListItem : listHead) {
 			BufferedReader reader = null;
 			try {
@@ -88,7 +94,7 @@ public class Metrics implements Runnable{
 			}
 			String line = null;
 			String ext = getFileExtension(lastListItem.file);
-
+			System.out.println("Parsing one of those tricky " + ext + " files!");
 			try {
 				line = reader.readLine();
 			} catch (IOException err) {
@@ -101,8 +107,8 @@ public class Metrics implements Runnable{
 				lastListItem.chars += line.length() + 2;  	//The Unix WC utility includes CR and LF characters in its count; String.length does not.
 				lastListItem.words += line.split("\\s+").length; 
 				
-				switch (ext) {
-					case ".c": //handle c code
+				if (ext.equals(".c") || ext.equals(".java")) {
+						
 						if (line.contains("/*") && line.contains("*/")) lastListItem.linesOfComment++; 
 							else if (line.contains("/*")) currentlyBlockComment = true;
 							else if (line.contains("*/")) currentlyBlockComment = false;
@@ -113,23 +119,8 @@ public class Metrics implements Runnable{
 						if (line.split("//").length > 1) //there are contents on the line besides comment
 							lastListItem.linesOfCode++;
 						else if (!line.trim().isEmpty()) lastListItem.linesOfCode++;
-						
-						break;
-					case ".h": //handle h code
-						break;
-					case ".java": //handle Java code
-						if (line.contains("/*") && line.contains("*/")) lastListItem.linesOfComment++; 
-							else if (line.contains("/*")) currentlyBlockComment = true;
-							else if (line.contains("*/")) currentlyBlockComment = false;
-							else if (line.contains("//") && !currentlyBlockComment) lastListItem.linesOfComment++;
-							
-						if (currentlyBlockComment) lastListItem.linesOfComment++;
-				
-						if (line.split("//").length > 1) //there are contents on the line besides comment
-							lastListItem.linesOfCode++;
-						else if (!line.trim().isEmpty()) lastListItem.linesOfCode++;
-						
-						break;
+				} else if (ext == ".h") {
+					
 				}
 				
 				//Get next line; if null the loop breaks here
@@ -145,13 +136,7 @@ public class Metrics implements Runnable{
 			totalLines += lastListItem.lines;
 			totalCode += lastListItem.linesOfCode;
 			totalComments += lastListItem.linesOfComment;
-			
-			formattedPrint(	lastListItem.lines, 
-							lastListItem.words, 
-							lastListItem.chars, 
-							lastListItem.linesOfCode,
-							lastListItem.linesOfComment,
-							lastListItem.file.getPath());
+		
 			
 			try {
 				reader.close();
