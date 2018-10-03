@@ -126,24 +126,28 @@ public class Metrics implements Runnable{
 						ext.equals(".cpp") || 
 						ext.equals(".h") || 
 						ext.equals(".hpp"))) {
-					if (currentlyBlockComment && !line.contains("'*'/")) lastListItem.linesOfComment++; 
-						else if (line.contains("/*")) { //Does this line have a self-contained comment /*like this*/
-							lastListItem.linesOfComment++; 		
-							String before = line.substring(0, line.indexOf('*')).trim(),
-									after = "";
-							if (line.contains("*/")) {
-								after = line.substring(line.lastIndexOf("*/"));
-							}
-							if (before.length() > 1) lastListItem.linesOfCode++; //Are there contents before the comment?
-							else if (after.length() > 1) lastListItem.linesOfCode++; //Are there contents after the comment?
+						if (currentlyBlockComment && !line.contains("*/")) lastListItem.linesOfComment++; 
+							else if (line.contains("/*")) { //Does this line have a self-contained comment /*like this*/
+								lastListItem.linesOfComment++; 		
+								String before = line.substring(0, line.indexOf('*')).trim(),
+										after = "";
+								if (line.contains("*/")) {
+									after = line.substring(line.lastIndexOf("*/"));
+								} else currentlyBlockComment = true;
+								if (before.length() > 1) lastListItem.linesOfCode++; //Are there contents before the comment?
+								else if (after.length() > 2) lastListItem.linesOfCode++; //Are there contents after the comment?
+						} else if (line.contains("*/")) {
+								lastListItem.linesOfComment++;
+								currentlyBlockComment = false;
+								String after = line.substring(line.lastIndexOf("*/"));
+								if (after.length() > 2) lastListItem.linesOfCode++; //Are there contents after the comment?
 						}
 						else if (line.contains("//")) {
 							lastListItem.linesOfComment++;
 							String before = line.substring(0, line.indexOf("//")).trim();
 									
 							if (before.length() > 1) lastListItem.linesOfCode++;
-						} else lastListItem.linesOfCode++;
-						
+						} else lastListItem.linesOfCode++;				
 				} 
 				
 				try { //Get next line; if null the loop breaks here
