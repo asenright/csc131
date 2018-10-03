@@ -3,35 +3,46 @@ by Andrew Enright
 for Dr. Posnett, CSU Sacramento, Fall 2018
 
 /////////Abstract///////////
-Metrics is a program which will gather metrics about files. Currently, 
-this includes words, lines, and characters of text in the file; 
-if it is a code file (c, cpp, h, hpp, java) lines containing comment and 
-lines containing source code can also be measured.
+	Metrics is a program which will gather metrics about files. Currently, 
+		this includes words, lines, and characters of text in the file; 
+		if it is a code file (c, cpp, h, hpp, java) lines containing comment and 
+		lines containing source code can also be measured.
 
 
 
 ////////Implementation: Major Components/////////
-Metrics has one subclass, wcFileNode, which contains a reference to the file 
-to be measured and the metrics of that file. 
-
-Metrics will have four primary modules: 
-(1) PicoCLI to parse command arguments,
-(2) a module for populating a list of wcFileNodes, 
-(3) a module for gathering metrics of that list, and
-(4) a module for outputting the gathered metrics. 
-(5) a subclass for holding the data and reference of a specific file.
+	Metrics will have the following primary modules: 
+		(1) PicoCLI to parse command arguments,
+		(2) a module for populating a list of wcFileNodes, 
+		(3) a module for gathering metrics of that list, and
+		(4) a module for outputting the gathered metrics. 
+		(5) a wcFileNodes subclass for holding the data and reference of a specific file.
 
 
 
-/////////Runtime Specifications///////////////////
-When run, Metrics will create a Metrics object and call it to run. 
-The arguments given (-l, -c, -w, -s, -C) determine which metrics are displayed. 
-It will run in the order (1)->(2)->(3)->(4) and terminate.
-If no files are listed, or if a specified file cannot be found, Metrics
-will print out a usage message. 
-Metrics' output will look similar to the wc utility in Unix, as follows:
-(a) There will be a row labelling columns (Row 0)
-(b) Columns' width will intelligently adjust itself as needed based on width of numbers
-(c) Rows 1-n will display the data for n items
-(d) Rows should be displayed in this order: "lines words chars source comment filename"
-(e) If n>1 (more than one file is shown) the final row, row n+1, should show the totals.
+/////////Runtime Arguments///////////////////
+	When run, Metrics will create a Metrics object and call it to run. 
+	The arguments given (-l, -c, -w, -s, -C) determine which metrics are displayed. 
+		-l will show lines in a file, -c will show number of characters, -w shows number of words.
+		-s shows number of lines containing source code and -C shows number of lines containing comments.
+		-s and -C are only counted for files ending in .c, .cpp, .java, .h, and .hpp.
+	These arguments will be POSIX-groupable- that is, "java Metrics -l test.txt -w" should have the same 		
+		results as "java Metrics -lw test.txt".
+	File names will be wild-cardable; if there are two files in a folder "test.txt" and "hamlet.txt"
+		then "java Metrics *.txt" should run exactly the same as "java Metrics test.txt hamlet.txt"
+
+/////////Runtime Specifications////////////////////
+	An overview of the run sequence is as follows:
+	(1) Parse command arguments. Show help and exit, or proceed to (2).
+	(2) Populate a list of wcFileNodes with a skeleton for each file.
+	(3) Iterate over the list and populate each item with the requested metrics.
+	(4) Print the metrics per each file. Metrics' output will look similar to the wc utility in Unix, as follows:
+		(a) There will be a row labelling columns (Row 0)
+		(b) Columns' width will intelligently adjust itself as needed based on width of numbers
+		(c) Rows 1-n will display the data for n items
+		(d) Rows should be displayed in this order: "lines words chars source comment filename"
+		(e) If n>1 (more than one file is shown) the final row, row n+1, should show the totals.
+	(5) Exit gracefully.
+
+	If no files are listed, or if a specified file cannot be found, Metrics
+	will print out a usage message. 
