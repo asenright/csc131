@@ -1,0 +1,24 @@
+77dc78a (HEAD -> master, origin/master, origin/HEAD) Self-adjusting header now prints AFTER getting the figures it's supposed to adjust for.
+d802dfe Increased accuracy of code and comment metrics.
+2240188 Increased accuracy of metrics.
+4d93130 Added .cpp and .hpp among files to be counted.
+c1b212b Header is also now self-adjusting
+37ac8ba Column width for each metric now self-adjusts based on totals.
+5263216 Added option for -h to call help.
+0b91806 Added design doc.
+cac10b2 Added corner cases for comment/code combo lines
+bca9272 Fixed comment counting
+7331576 Refactored printListMetrics; the code to gather metrics is now in gatherListMetrics and the print statement must be called separately.
+542495d Refactored for picoCLI. Added ability to measure lines of code in .c and .java files.
+4fb1755 Added picoCLI to project
+12cc447 Fixed references in Metrics.java
+bd39f83 Refactored 'wc' to 'Metrics'
+fee1933 Added picoCLI to source folder.
+6f178a9 Refactored to add additional data fields.
+ee113ff Increased accuracy of metrics.
+f0f085a Variables tracking wanted metrics no longer nullable
+dcb2391 Removed unused include.
+178ce41 Corrected output formatting; added running total.
+f47f04d Removed lineindex in lieu of using existing data
+35ac382 Added a .gitignore
+f9019ac Initial

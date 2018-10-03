@@ -1,10 +1,16 @@
-Metric.java Design Principles
+Metrics.java Design Principles
+by Andrew Enright
+for Dr. Posnett, CSU Sacramento, Fall 2018
 
-Metric is a program which will gather metrics about files. Currently, 
+/////////Abstract///////////
+Metrics is a program which will gather metrics about files. Currently, 
 this includes words, lines, and characters of text in the file; 
 if it is a code file (c, cpp, h, hpp, java) lines containing comment and 
 lines containing source code can also be measured.
 
+
+
+////////Implementation: Major Components/////////
 Metrics has one subclass, wcFileNode, which contains a reference to the file 
 to be measured and the metrics of that file. 
 
@@ -13,7 +19,11 @@ Metrics will have four primary modules:
 (2) a module for populating a list of wcFileNodes, 
 (3) a module for gathering metrics of that list, and
 (4) a module for outputting the gathered metrics. 
+(5) a subclass for holding the data and reference of a specific file.
 
+
+
+/////////Runtime Specifications///////////////////
 When run, Metrics will create a Metrics object and call it to run. 
 The arguments given (-l, -c, -w, -s, -C) determine which metrics are displayed. 
 It will run in the order (1)->(2)->(3)->(4) and terminate.

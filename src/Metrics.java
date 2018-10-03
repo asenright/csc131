@@ -101,9 +101,7 @@ public class Metrics implements Runnable{
 			} catch (IOException err) {
 				System.out.println("Could not parse line 0");
 			} 
-			
-	
-			
+		
 			boolean currentlyBlockComment = false;
 			String ext = "";
 			while (line != null) {
@@ -164,7 +162,6 @@ public class Metrics implements Runnable{
 			totalLines += lastListItem.lines;
 			totalCode += lastListItem.linesOfCode;
 			totalComments += lastListItem.linesOfComment;
-		
 			
 			try {
 				reader.close();
