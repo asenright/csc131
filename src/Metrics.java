@@ -15,6 +15,8 @@ import picocli.CommandLine.*;
 
 @Command(description="Prints metrics of the given file to STDOUT.",	name="Metrics")
 public class Metrics implements Runnable{
+	private static final int COLUMN_SEP_WIDTH = 1; //Amount of whitespace to put between columns.
+
 	private static void printUsage() {
 		System.out.println("Usage: 'java Metrics <-l|-c|-w> filename1 filename2 ... filenameN'"
 				+ "\n'java Metrics  -l <filename>' will print the line count of all specified files"
@@ -71,8 +73,8 @@ public class Metrics implements Runnable{
 		if (!countLines && !countWords && !countChars && !countCode && !countComments) 			
 			countLines = countWords = countChars = countCode = countComments = true;		
 		
+		gatherFileMetrics(listHead);	
 		printHeader();
-		gatherFileMetrics(listHead);		
 		for (wcFileNode lastListItem : listHead) formattedPrint(	lastListItem.lines, 
 				lastListItem.words, 
 				lastListItem.chars, 
@@ -218,7 +220,7 @@ public class Metrics implements Runnable{
 	}
 	
 	private int getColumnWidth(int totalToMeasure, int minimumWidth) {		
-		return Math.max(new Integer(totalLines).toString().length()  + 2, minimumWidth);
+		return Math.max(new Integer(totalLines).toString().length()  + COLUMN_SEP_WIDTH, minimumWidth);
 	}
 	
 class wcFileNode {
