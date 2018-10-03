@@ -27,6 +27,8 @@ public class Metrics implements Runnable{
 				);
 			System.exit(0);
 	}
+	@Option(description = "Show usage", names = { "-h" }, paramLabel="help") 
+	boolean showHelp;
 	
 	@Option(description = "Count number of lines", names = { "-l" }, paramLabel="countLines") 
 	boolean countLines;
@@ -51,13 +53,14 @@ public class Metrics implements Runnable{
 
 	private LinkedList<wcFileNode> listHead = null;	
 	
-	public static void main(String[] args) {
-		if (args.length == 0) printUsage();		
+	public static void main(String[] args) {		
+		if (args.length == 0 ) printUsage();
 		Metrics wordCounterInstance = new Metrics();
 		CommandLine.run(wordCounterInstance, args);
 	}
 	
 	public void run() {		
+		if (showHelp) printUsage();
 		listHead = new LinkedList<wcFileNode>();
 		
 		try { populateList(files, listHead); }
