@@ -49,7 +49,7 @@ public class Metrics implements Runnable{
 	LinkedList<File> files;
 		
 	private static final int COLUMN_WIDTH = 14;
-	private int totalLines, totalChars, totalWords, totalCode, totalComments, numItems;
+	private int totalLines, totalChars, totalWords, totalCode, totalComments;
 
 	private LinkedList<wcFileNode> listHead = null;	
 	
@@ -82,7 +82,7 @@ public class Metrics implements Runnable{
 				lastListItem.linesOfCode,
 				lastListItem.linesOfComment,
 				lastListItem.file.getPath());
-		if (numItems > 1) 
+		if (listHead.size() > 1) 
 			formattedPrint(totalLines, totalWords, totalChars, totalCode, totalComments, "total");
 	}
 	
@@ -203,12 +203,17 @@ public class Metrics implements Runnable{
 	}
 	
 	private void formattedPrint(Integer lines, Integer words, Integer chars, Integer linesCode, Integer linesComment, String filename) {
-		String format = "%"+COLUMN_WIDTH+"d";
-		if (countLines) System.out.printf(format, lines);
-		if (countWords) System.out.printf(format, words);
-		if (countChars) System.out.printf(format, chars);
-		if (countCode) System.out.printf(format, linesCode);
-		if (countComments) System.out.printf(format, linesComment);
+		int linesWidth = new Integer(totalLines).toString().length() + 2,
+		 wordsWidth = new Integer(totalWords).toString().length() + 2,
+		 charsWidth = new Integer(totalChars).toString().length() + 2,
+		 codesWidth = new Integer(totalCode).toString().length() + 2,
+		 commentsWidth = new Integer(totalComments).toString().length() + 2;
+		
+		if (countLines) System.out.printf("%"+ linesWidth +"d", lines);
+		if (countWords) System.out.printf("%"+ wordsWidth +"d", words);
+		if (countChars) System.out.printf("%"+ charsWidth +"d", chars);
+		if (countCode) System.out.printf("%"+ codesWidth + "d", linesCode);
+		if (countComments) System.out.printf("%"+ commentsWidth + "d", linesComment);
 		
 		System.out.printf(" %s%n", filename);
 	}
