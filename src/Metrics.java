@@ -101,6 +101,11 @@ public class Metrics implements Runnable{
 			} catch (IOException err) {
 				System.out.println("Could not parse line 0");
 			} 
+			
+			String cleanLine = line.trim().replace("\n", "").replace("\0", "");
+			int diff = line.length() - cleanLine.length();
+			line = cleanLine;
+			
 			boolean currentlyBlockComment = false;
 			String ext = "";
 			while (line != null) {
@@ -114,26 +119,40 @@ public class Metrics implements Runnable{
 					e.printStackTrace();
 				}
 				lastListItem.lines++;			
-				lastListItem.chars += line.length() + 2;  	//The Unix WC utility includes CR and LF characters in its count; String.length does not.
+				lastListItem.chars += line.length() + diff;  	//The Unix WC utility includes CR and LF characters in its count; String.length does not.
 				lastListItem.words += line.split("\\s+").length; 
 				
-				if ((ext.equals(".c") || ext.equals(".java")) && !line.trim().equals("")) {
-						if (line.contains("/*") && line.contains("*/")) lastListItem.linesOfComment++; 
+				if ((	ext.equals(".c") || 
+						ext.equals(".java") || 
+						ext.equals(".cpp") || 
+						ext.equals(".h") || 
+						ext.equals(".hpp")) 
+						&& line.length() > 0) {
+					if (currentlyBlockComment && !line.contains("*/")) lastListItem.linesOfComment++; 
+						else if (line.contains("/*") && line.contains("*/")) { //Does this line have a self-contained comment /*like this*/
+							lastListItem.linesOfComment++; 							
+							if (line.split("/*").length > 1) lastListItem.linesOfCode++; //Are there contents before the comment?
+							else if (line.split("*/").length > 1) lastListItem.linesOfCode++; //Are there contents after the comment?
+						}
 						else if (line.contains("/*")) 	{
 							currentlyBlockComment = true;
 							lastListItem.linesOfComment++;
+							if (line.split("/*").length > 1) lastListItem.linesOfCode++; //Are there contents before the comment?
 						}
 						else if (line.contains("*/")) {
 							currentlyBlockComment = false;
 							lastListItem.linesOfComment++;
+							if (line.split("'*'/").length > 1) lastListItem.linesOfCode++; //Are there contents after the comment?
 						}
-						else if (line.contains("//") && !currentlyBlockComment) lastListItem.linesOfComment++;
-						else if (currentlyBlockComment) lastListItem.linesOfComment++;
-				
-						if (line.split("//").length > 1 && !currentlyBlockComment) //there are contents on the line besides comment
-							lastListItem.linesOfCode++;
-						else if (!line.contains("*/") && !line.contains("/*") && !currentlyBlockComment) lastListItem.linesOfCode++;
-						else if (line.contains("/*") && !(line.substring(0, line.indexOf("/*")).trim().equals("//s+"))) lastListItem.linesOfCode++;	//code, then /*comment*/
+						else if (line.contains("//") && !currentlyBlockComment) {
+							lastListItem.linesOfComment++;
+						} else lastListItem.linesOfCode++; //At this point we know it's a non-empty line with no comments.
+						
+						//if (!line.contains("//") && !currentlyBlockComment) //there are contents on the line besides comment
+							//lastListItem.linesOfCode++;
+						
+						//else if (!line.contains("*/") && !line.contains("/*") && !currentlyBlockComment) lastListItem.linesOfCode++;
+						//else if (line.contains("/*") && !(line.substring(0, line.indexOf("/*")).trim().equals("//s+"))) lastListItem.linesOfCode++;	//code, then /*comment*/
 						//else if (line.contains("*/") && !line.substring(line.indexOf("*/"), line.length() - 1).equals("//s+")) lastListItem.linesOfCode++;	//this one's /*comment*/ then code
 				} else if (ext == ".h") {
 					
