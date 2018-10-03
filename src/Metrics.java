@@ -48,7 +48,6 @@ public class Metrics implements Runnable{
 	@Parameters
 	LinkedList<File> files;
 		
-	private static final int COLUMN_WIDTH = 14;
 	private int totalLines, totalChars, totalWords, totalCode, totalComments;
 
 	private LinkedList<wcFileNode> listHead = null;	
@@ -190,30 +189,26 @@ public class Metrics implements Runnable{
 			}	
 	}
 	
+	private int getColumnWidth(int totalToMeasure, int minimumWidth) {		
+		return Math.max(new Integer(totalLines).toString().length()  + 2, minimumWidth);
+	}
 
 	private void printHeader() {
-		String format = "%"+COLUMN_WIDTH+"s";
-		if (countLines) System.out.printf(format, "lines");
-		if (countWords) System.out.printf(format, "words");
-		if (countWords) System.out.printf(format, "chars");
-		if (countCode) 	System.out.printf(format, "sourcelines");
-		if (countComments) System.out.printf(format, "commentlines");
-		
-		System.out.printf(" %-"+COLUMN_WIDTH+"s%n", "filename");
+		if (countLines) System.out.printf("%"+ getColumnWidth(totalLines, 7) +"s", "lines");
+		if (countWords) System.out.printf("%"+ getColumnWidth(totalWords, 7) +"s", "words");
+		if (countChars) System.out.printf("%"+ getColumnWidth(totalChars, 7 )+"s", "chars");
+		if (countCode) System.out.printf("%"+ getColumnWidth(totalCode, 8) + "s", "source");
+		if (countComments) System.out.printf("%"+ getColumnWidth(totalComments, 10) + "s", "comments");
+				
+		System.out.printf(" %-10s%n", "filename");
 	}
 	
 	private void formattedPrint(Integer lines, Integer words, Integer chars, Integer linesCode, Integer linesComment, String filename) {
-		int linesWidth = new Integer(totalLines).toString().length() + 2,
-		 wordsWidth = new Integer(totalWords).toString().length() + 2,
-		 charsWidth = new Integer(totalChars).toString().length() + 2,
-		 codesWidth = new Integer(totalCode).toString().length() + 2,
-		 commentsWidth = new Integer(totalComments).toString().length() + 2;
-		
-		if (countLines) System.out.printf("%"+ linesWidth +"d", lines);
-		if (countWords) System.out.printf("%"+ wordsWidth +"d", words);
-		if (countChars) System.out.printf("%"+ charsWidth +"d", chars);
-		if (countCode) System.out.printf("%"+ codesWidth + "d", linesCode);
-		if (countComments) System.out.printf("%"+ commentsWidth + "d", linesComment);
+		if (countLines) System.out.printf("%"+ getColumnWidth(totalLines, 7) +"d", lines);
+		if (countWords) System.out.printf("%"+ getColumnWidth(totalWords, 7) +"d", words);
+		if (countChars) System.out.printf("%"+ getColumnWidth(totalChars, 7 )+"d", chars);
+		if (countCode) System.out.printf("%"+ getColumnWidth(totalCode, 8) + "d", linesCode);
+		if (countComments) System.out.printf("%"+ getColumnWidth(totalComments, 10) + "d", linesComment);
 		
 		System.out.printf(" %s%n", filename);
 	}
