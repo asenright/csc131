@@ -7,10 +7,8 @@
 *  Credit to technicalkeeda.com for getFileExtension()	
 */
 import java.io.*;
-
 import java.util.LinkedList;
 import java.util.List;
-
 import picocli.CommandLine;
 import picocli.CommandLine.*;
 
@@ -102,13 +100,12 @@ public class Metrics implements Runnable{
 				System.out.println("Could not parse line 0");
 			} 
 			
-			String cleanLine = line.trim().replace("\n", "").replace("\0", "");
-			int diff = line.length() - cleanLine.length();
-			line = cleanLine;
+	
 			
 			boolean currentlyBlockComment = false;
 			String ext = "";
 			while (line != null) {
+				line = line.replace("\t", "").replace("\n", "");
 				try {
 					//Java kindly handles multiple files for us; this means we need to check the extension every line
 					// if we want to be able to run on multiple file types with same wildcarded name
@@ -118,49 +115,38 @@ public class Metrics implements Runnable{
 					System.out.println("Error getting canonical file name");
 					e.printStackTrace();
 				}
-				lastListItem.lines++;			
-				lastListItem.chars += line.length() + diff;  	//The Unix WC utility includes CR and LF characters in its count; String.length does not.
+				lastListItem.lines++;		
+				lastListItem.chars += line.length() ;  	//The Unix WC utility includes CR and LF characters in its count; String.length does not.
 				lastListItem.words += line.split("\\s+").length; 
 				
-				if ((	ext.equals(".c") || 
+				if ((countCode || countComments) && 
+						!line.isEmpty() && 
+						(ext.equals(".c") || 
 						ext.equals(".java") || 
 						ext.equals(".cpp") || 
 						ext.equals(".h") || 
-						ext.equals(".hpp")) 
-						&& line.length() > 0) {
-					if (currentlyBlockComment && !line.contains("*/")) lastListItem.linesOfComment++; 
-						else if (line.contains("/*") && line.contains("*/")) { //Does this line have a self-contained comment /*like this*/
-							lastListItem.linesOfComment++; 							
-							if (line.split("/*").length > 1) lastListItem.linesOfCode++; //Are there contents before the comment?
-							else if (line.split("*/").length > 1) lastListItem.linesOfCode++; //Are there contents after the comment?
+						ext.equals(".hpp"))) {
+					if (currentlyBlockComment && !line.contains("'*'/")) lastListItem.linesOfComment++; 
+						else if (line.contains("/*")) { //Does this line have a self-contained comment /*like this*/
+							lastListItem.linesOfComment++; 		
+							String before = line.substring(0, line.indexOf('*')).trim(),
+									after = "";
+							if (line.contains("*/")) {
+								after = line.substring(line.lastIndexOf("*/"));
+							}
+							if (before.length() > 1) lastListItem.linesOfCode++; //Are there contents before the comment?
+							else if (after.length() > 1) lastListItem.linesOfCode++; //Are there contents after the comment?
 						}
-						else if (line.contains("/*")) 	{
-							currentlyBlockComment = true;
+						else if (line.contains("//")) {
 							lastListItem.linesOfComment++;
-							if (line.split("/*").length > 1) lastListItem.linesOfCode++; //Are there contents before the comment?
-						}
-						else if (line.contains("*/")) {
-							currentlyBlockComment = false;
-							lastListItem.linesOfComment++;
-							if (line.split("'*'/").length > 1) lastListItem.linesOfCode++; //Are there contents after the comment?
-						}
-						else if (line.contains("//") && !currentlyBlockComment) {
-							lastListItem.linesOfComment++;
-						} else lastListItem.linesOfCode++; //At this point we know it's a non-empty line with no comments.
+							String before = line.substring(0, line.indexOf("//")).trim();
+									
+							if (before.length() > 1) lastListItem.linesOfCode++;
+						} else lastListItem.linesOfCode++;
 						
-						//if (!line.contains("//") && !currentlyBlockComment) //there are contents on the line besides comment
-							//lastListItem.linesOfCode++;
-						
-						//else if (!line.contains("*/") && !line.contains("/*") && !currentlyBlockComment) lastListItem.linesOfCode++;
-						//else if (line.contains("/*") && !(line.substring(0, line.indexOf("/*")).trim().equals("//s+"))) lastListItem.linesOfCode++;	//code, then /*comment*/
-						//else if (line.contains("*/") && !line.substring(line.indexOf("*/"), line.length() - 1).equals("//s+")) lastListItem.linesOfCode++;	//this one's /*comment*/ then code
-				} else if (ext == ".h") {
-					
-					
-				}
+				} 
 				
-				//Get next line; if null the loop breaks here
-				try {
+				try { //Get next line; if null the loop breaks here
 					line = reader.readLine();
 				} catch (IOException err) {
 					System.out.println("Could not parse line" + lastListItem.lines);
@@ -185,7 +171,6 @@ public class Metrics implements Runnable{
 	}
 	
 	//Credit to technicalkeeda.com for getFileExtension()
-
 	private String getFileExtension(File file) {
 		String extension = "";
 		try {
@@ -206,10 +191,6 @@ public class Metrics implements Runnable{
 				wcFileNode tmp = new wcFileNode(current);
 				listHead.add(tmp);
 			}	
-	}
-	
-	private int getColumnWidth(int totalToMeasure, int minimumWidth) {		
-		return Math.max(new Integer(totalLines).toString().length()  + 2, minimumWidth);
 	}
 
 	private void printHeader() {
@@ -232,7 +213,10 @@ public class Metrics implements Runnable{
 		System.out.printf(" %s%n", filename);
 	}
 	
-
+	private int getColumnWidth(int totalToMeasure, int minimumWidth) {		
+		return Math.max(new Integer(totalLines).toString().length()  + 2, minimumWidth);
+	}
+	
 class wcFileNode {
 	int lines, chars, words, linesOfCode, linesOfComment;
 	File file;
