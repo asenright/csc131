@@ -16,6 +16,7 @@ import picocli.CommandLine.*;
 @Command(description="Prints metrics of the given file to STDOUT.",	name="Metrics")
 public class Metrics implements Runnable{
 	private static final int COLUMN_SEP_WIDTH = 1; //Amount of whitespace to put between columns.
+	private static final String NOT_APPLICABLE = "n/a";
 
 	private static void printUsage() {
 		System.out.println("Usage: 'java Metrics <-l|-c|-w> filename1 filename2 ... filenameN'"
@@ -132,8 +133,8 @@ public class Metrics implements Runnable{
 		if (countLines) System.out.printf("%"+ getColumnWidth(totalLines, 7) +"d", lines);
 		if (countWords) System.out.printf("%"+ getColumnWidth(totalWords, 7) +"d", words);
 		if (countChars) System.out.printf("%"+ getColumnWidth(totalChars, 7 )+"d", chars);
-		if (countCode) System.out.printf("%"+ getColumnWidth(totalCode, 8) + "d", linesCode);
-		if (countComments) System.out.printf("%"+ getColumnWidth(totalComments, 10) + "d", linesComment);
+		if (countCode) System.out.printf("%"+ getColumnWidth(totalCode, 8) + "s", linesCode > 0 ? new Integer(linesCode).toString() : NOT_APPLICABLE);
+		if (countComments) System.out.printf("%"+ getColumnWidth(totalComments, 10) + "s", linesComment > 0 ? new Integer(linesComment).toString() : NOT_APPLICABLE);
 		
 		System.out.printf(" %s%n", filename);
 	}
