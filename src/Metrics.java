@@ -87,89 +87,11 @@ public class Metrics implements Runnable{
 	
 	private void gatherFileMetrics(LinkedList<wcFileNode> listHead) {
 		for (wcFileNode lastListItem : listHead) {
-			BufferedReader reader = null;
-			try {
-				reader = new BufferedReader(new FileReader(lastListItem.file));
-			} catch (FileNotFoundException e) {
-				System.out.println("Argument could not be parsed as an argument or filename.");
-				System.exit(1);
-			}
-			String line = null;
-			
-			try {
-				line = reader.readLine();
-			} catch (IOException err) {
-				System.out.println("Could not parse line 0");
-			} 
-		
-			boolean currentlyBlockComment = false;
-			String ext = "";
-			while (line != null) {
-				line = line.replace("\t", "").replace("\n", "");
-				try {
-					//Java kindly handles multiple files for us; this means we need to check the extension every line
-					// if we want to be able to run on multiple file types with same wildcarded name
-					// i.e. test* will run code analysis on test.c but not test.txt
-					ext = getFileExtension(lastListItem.file.getCanonicalFile()); 
-				} catch (Exception e) {
-					System.out.println("Error getting canonical file name");
-					e.printStackTrace();
-				}
-				lastListItem.lines++;		
-				lastListItem.chars += line.length() ;  	//The Unix WC utility includes CR and LF characters in its count; String.length does not.
-				lastListItem.words += line.split("\\s+").length; 
-				
-				if ((countCode || countComments) && 
-						!line.isEmpty() && 
-						(ext.equals(".c") || 
-						ext.equals(".java") || 
-						ext.equals(".cpp") || 
-						ext.equals(".h") || 
-						ext.equals(".hpp"))) {
-						if (currentlyBlockComment && !line.contains("*/")) lastListItem.linesOfComment++; 
-							else if (line.contains("/*")) { //Does this line have a self-contained comment /*like this*/
-								lastListItem.linesOfComment++; 		
-								String before = line.substring(0, line.indexOf('*')).trim(),
-										after = "";
-								if (line.contains("*/")) {
-									after = line.substring(line.lastIndexOf("*/"));
-								} else currentlyBlockComment = true;
-								if (before.length() > 1) lastListItem.linesOfCode++; //Are there contents before the comment?
-								else if (after.length() > 2) lastListItem.linesOfCode++; //Are there contents after the comment?
-						} else if (line.contains("*/")) {
-								lastListItem.linesOfComment++;
-								currentlyBlockComment = false;
-								String after = line.substring(line.lastIndexOf("*/"));
-								if (after.length() > 2) lastListItem.linesOfCode++; //Are there contents after the comment?
-						}
-						else if (line.contains("//")) {
-							lastListItem.linesOfComment++;
-							String before = line.substring(0, line.indexOf("//")).trim();
-									
-							if (before.length() > 1) lastListItem.linesOfCode++;
-						} else lastListItem.linesOfCode++;				
-				} 
-				
-				try { //Get next line; if null the loop breaks here
-					line = reader.readLine();
-				} catch (IOException err) {
-					System.out.println("Could not parse line" + lastListItem.lines);
-				} 
-			}
-	
 			totalWords += lastListItem.words;
 			totalChars += lastListItem.chars;
 			totalLines += lastListItem.lines;
 			totalCode += lastListItem.linesOfCode;
 			totalComments += lastListItem.linesOfComment;
-			
-			try {
-				reader.close();
-			} catch (IOException err) {
-				System.out.println("Error closing buffered reader");
-				err.printStackTrace();
-			}
-			
 		}
 	}
 	
@@ -224,10 +146,82 @@ class wcFileNode {
 	int lines, chars, words, linesOfCode, linesOfComment;
 	File file;
 	wcFileNode next = null;
+	String ext = "";
 	
 	public wcFileNode(File toCount) {
 		this.file = toCount;
 		if (!file.exists()) throw new IllegalArgumentException("No file found matching '" + file.getName() + "'");
+		
+		ext = getFileExtension(file);
+		System.out.println("File " + file.getName() + " is a dirty rotten " + ext);
+		
+		BufferedReader reader = null;
+		try {
+			reader = new BufferedReader(new FileReader(file));
+		} catch (FileNotFoundException e) {
+			System.out.println("Argument could not be parsed as an argument or filename.");
+			System.exit(1);
+		}
+		String line = null;
+		
+		try {
+			line = reader.readLine();
+		} catch (IOException err) {
+			System.out.println("Could not parse line 0");
+		} 
+	
+		boolean currentlyBlockComment = false;
+		while (line != null) {
+			line = line.replace("\t", "").replace("\n", "");
+			lines++;		
+			chars += line.length() ;  	//The Unix WC utility includes CR and LF characters in its count; String.length does not.
+			words += line.split("\\s+").length; 
+			
+			if ((countCode || countComments) && 
+					!line.isEmpty() && 
+					(ext.equals(".c") || 
+					ext.equals(".java") || 
+					ext.equals(".cpp") || 
+					ext.equals(".h") || 
+					ext.equals(".hpp"))) {
+					if (currentlyBlockComment && !line.contains("*/")) linesOfComment++; 
+						else if (line.contains("/*")) { //Does this line have a self-contained comment /*like this*/
+							linesOfComment++; 		
+							String before = line.substring(0, line.indexOf('*')).trim(),
+									after = "";
+							if (line.contains("*/")) {
+								after = line.substring(line.lastIndexOf("*/"));
+							} else currentlyBlockComment = true;
+							if (before.length() > 1) linesOfCode++; //Are there contents before the comment?
+							else if (after.length() > 2) linesOfCode++; //Are there contents after the comment?
+					} else if (line.contains("*/")) {
+							linesOfComment++;
+							currentlyBlockComment = false;
+							String after = line.substring(line.lastIndexOf("*/"));
+							if (after.length() > 2) linesOfCode++; //Are there contents after the comment?
+					}
+					else if (line.contains("//")) {
+						linesOfComment++;
+						String before = line.substring(0, line.indexOf("//")).trim();
+								
+						if (before.length() > 1) linesOfCode++;
+					} else linesOfCode++;				
+			} 
+			
+			try { //Get next line; if null the loop breaks here
+				line = reader.readLine();
+			} catch (IOException err) {
+				System.out.println("Could not parse line" + lines);
+			} 
+	
+		}
+		
+		try {
+			reader.close();
+		} catch (IOException err) {
+			System.out.println("Error closing buffered reader");
+			err.printStackTrace();
+		}
 	}
 }
 
