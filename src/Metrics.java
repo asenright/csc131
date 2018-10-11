@@ -5,10 +5,14 @@
 *	Usage: 'java wc <-l|-c|-w|-s|-C> filename
 *
 *  Credit to technicalkeeda.com for getFileExtension()	
+*  Credit to https://www.geeksforgeeks.org/print-unique-words-string/ for unique words in string
 */
 import java.io.*;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
+
 import picocli.CommandLine;
 import picocli.CommandLine.*;
 
@@ -46,12 +50,15 @@ public class Metrics implements Runnable{
 	@Option(description = "Count lines of comment", names = { "-C" }, paramLabel="countComment")
 	boolean countComments;
 	
+	@Option(description = "Calculate Halstead complexity", names = {"-H"}, paramLabel="countHalstead")
+	boolean calcHalstead;
+	
 	@Parameters
 	LinkedList<File> files;
 		
-	private int totalLines, totalChars, totalWords, totalCode, totalComments;
+	private int totalLines, totalChars, totalWords, totalCode, totalComments, totalUniqueOperands, totalUniqueOperators, totalOperands, totalOperators;
 
-	private LinkedList<wcFileNode> listHead = null;	
+	private LinkedList<metricsFileNode> listHead = null;	
 	
 	public static void main(String[] args) {		
 		if (args.length == 0 ) printUsage();
@@ -61,7 +68,7 @@ public class Metrics implements Runnable{
 	
 	public void run() {		
 		if (showHelp) printUsage();
-		listHead = new LinkedList<wcFileNode>();
+		listHead = new LinkedList<metricsFileNode>();
 		
 		try { populateList(files, listHead); }
 		catch (Exception e) { 
@@ -76,7 +83,7 @@ public class Metrics implements Runnable{
 		
 		gatherFileMetrics(listHead);	
 		printHeader();
-		for (wcFileNode lastListItem : listHead) formattedPrint(	lastListItem.lines, 
+		for (metricsFileNode lastListItem : listHead) formattedPrint(	lastListItem.lines, 
 				lastListItem.words, 
 				lastListItem.chars, 
 				lastListItem.linesOfCode,
@@ -86,8 +93,8 @@ public class Metrics implements Runnable{
 			formattedPrint(totalLines, totalWords, totalChars, totalCode, totalComments, "total");
 	}
 	
-	private void gatherFileMetrics(LinkedList<wcFileNode> listHead) {
-		for (wcFileNode lastListItem : listHead) {
+	private void gatherFileMetrics(LinkedList<metricsFileNode> listHead) {
+		for (metricsFileNode lastListItem : listHead) {
 			totalWords += lastListItem.words;
 			totalChars += lastListItem.chars;
 			totalLines += lastListItem.lines;
@@ -111,10 +118,10 @@ public class Metrics implements Runnable{
 		return extension;
 	}
 
-	private void populateList(List<File> files, LinkedList<wcFileNode> listHead) throws FileNotFoundException {
+	private void populateList(List<File> files, LinkedList<metricsFileNode> listHead) throws FileNotFoundException {
 		for (File current : files) {
 				if (!current.exists()) throw new FileNotFoundException("Could not find file " + current.getName());
-				wcFileNode tmp = new wcFileNode(current);
+				metricsFileNode tmp = new metricsFileNode(current);
 				listHead.add(tmp);
 			}	
 	}
@@ -143,13 +150,14 @@ public class Metrics implements Runnable{
 		return Math.max(new Integer(totalLines).toString().length()  + COLUMN_SEP_WIDTH, minimumWidth);
 	}
 	
-class wcFileNode {
-	int lines, chars, words, linesOfCode, linesOfComment;
+class metricsFileNode {
+	int lines, chars, words, linesOfCode, linesOfComment, totalOperators, totalOperands;
+	Set<String> operators = new HashSet<String>(), operands = new HashSet<String>();
 	File file;
-	wcFileNode next = null;
+	metricsFileNode next = null;
 	String ext = "";
 	
-	public wcFileNode(File toCount) {
+	public metricsFileNode(File toCount) {
 		this.file = toCount;
 		if (!file.exists()) throw new IllegalArgumentException("No file found matching '" + file.getName() + "'");
 		
@@ -177,7 +185,7 @@ class wcFileNode {
 			lines++;		
 			chars += line.length() ;  	//The Unix WC utility includes CR and LF characters in its count; String.length does not.
 			words += line.split("\\s+").length; 
-			
+					
 			if ((countCode || countComments) && 
 					!line.isEmpty() && 
 					(ext.equals(".c") || 
@@ -185,6 +193,10 @@ class wcFileNode {
 					ext.equals(".cpp") || 
 					ext.equals(".h") || 
 					ext.equals(".hpp"))) {
+				
+					//Halstead Metrics
+					
+					//Count code and Comments
 					if (currentlyBlockComment && !line.contains("*/")) linesOfComment++; 
 						else if (line.contains("/*")) { //Does this line have a self-contained comment /*like this*/
 							linesOfComment++; 		
@@ -225,6 +237,19 @@ class wcFileNode {
 		}
 	}
 }
+}
 
-
+class metricsLib {
+		public static int countCode(String toCount){
+			return 0;
+		}
+		public static int countComments(String toCount) {
+			return 0;
+		}
+		public static int countOperators(String toCount) {
+			return 0;
+		}
+		public static int countOperands(String toCount) {
+			return 0;
+		}
 }
