@@ -145,25 +145,29 @@ public class Metrics implements Runnable{
 	 * Prints output header.
 	 */
 	private void printHeader() {
-		if (countLines) System.out.printf("%"+ getColumnWidth(totalLines, 7) +"s", "lines");
-		if (countWords) System.out.printf("%"+ getColumnWidth(totalWords, 7) +"s", "words");
-		if (countChars) System.out.printf("%"+ getColumnWidth(totalChars, 7 )+"s", "chars");
-		if (countCode) System.out.printf("%"+ getColumnWidth(totalCode, 8) + "s", "source");
-		if (countComments) System.out.printf("%"+ getColumnWidth(totalComments, 10) + "s", "comments");
+		if (countLines) printHeader("lines", totalLines);
+		if (countWords) printHeader("words", totalWords);
+		if (countChars) printHeader("chars", totalChars);
+		if (countCode)  printHeader("source", totalCode);
+		if (countComments) printHeader("source", totalComments);
 		if (calcHalstead) {
-			System.out.printf("%"+ getColumnWidth(totalOperators, 10) + "s", "operators");		
-			System.out.printf("%"+ getColumnWidth(totalOperands, 10) + "s", "operands");
-			System.out.printf("%"+ getColumnWidth(totalOperators, 14) + "s", "unq operators");
-			System.out.printf("%"+ getColumnWidth(totalOperands, 12) + "s", "unq operands");
+			printHeader("operators", totalOperators);	
+			printHeader("operands", totalOperands);	
+			printHeader("unq operators", totalOperators);	
+			printHeader("unq operands", totalOperands);	
 			
-			System.out.printf("%"+ getColumnWidth(totalOperators, 8) + "s", "vocab");		
-			System.out.printf("%"+ getColumnWidth(totalOperands, 8) + "s", "length");
-			System.out.printf("%"+ getColumnWidth(totalOperators, 10) + "s", "calcLength");
-			System.out.printf("%"+ getColumnWidth(totalOperands, 6) + "s", "volume");
-			System.out.printf("%"+ getColumnWidth(totalOperators, 10) + "s", "difficulty");
-			System.out.printf("%"+ getColumnWidth(totalOperands, 6) + "s", "effort");
+			printHeader("vocab", totalVocab);	
+			printHeader("length", totalLength);	
+			printHeader("calcLength", totalCalcLength);	
+			printHeader("volume", totalVolume);	
+			printHeader("difficulty", totalDifficulty);	
+			printHeader("effort", totalEffort);	
 		}
 		System.out.printf(" %-10s%n", "filename");
+	}
+	
+	private void printHeader(String columnName, int metricTotal) {
+		System.out.printf("%"+ getColumnWidth(metricTotal, columnName.length()) +"s", columnName);
 	}
 	
 	/**
@@ -214,12 +218,10 @@ public class Metrics implements Runnable{
 	}
 	
 	
-	/** Abstraction method for neatness. Prints totals of the given Metrics object.
+	/** Abstraction method for neatness. Used for printing totals.
 	 * @param toPrint Metrics object whose totals are to be printed.
 	 */
 	private void formattedPrint(Metrics toPrint) {
-		//			Integer vocab, Integer length, Integer totalCalcLength, Integer volume, Integer difficulty, Integer effort, String filename
-		
 		formattedPrint(toPrint.totalLines, toPrint.totalWords, toPrint.totalChars, toPrint.totalCode, toPrint.totalComments, 
 				toPrint.totalOperators, toPrint.totalOperands, toPrint.totalUniqueOperators, toPrint.totalUniqueOperands,
 				toPrint.totalVocab, toPrint.totalLength, toPrint.totalCalcLength, toPrint.totalVolume, toPrint.totalDifficulty, 
