@@ -24,6 +24,21 @@ import picocli.CommandLine.*;
 @Command(description="Prints metrics of the given file to STDOUT.",	name="Metrics")
 public class Metrics implements Runnable{
 	private static final int COLUMN_SEP_WIDTH = 1; //Amount of whitespace to put between columns.
+	private static final String COLUMN_LINES = "lines", 
+								COLUMN_WORDS = "words",
+								COLUMN_CHARS = "chars",
+								COLUMN_SOURCE = "source",
+								COLUMN_COMMENTS = "comments",
+								COLUMN_OPERATORS = "operators",
+								COLUMN_OPERANDS = "operands",
+								COLUMN_UNIQUE_OPERATORS = "unqOperators",
+								COLUMN_UNIQUE_OPERANDS = "unqOperands",
+								COLUMN_VOCAB = "vocab",
+								COLUMN_LENGTH = "length",
+								COLUMN_CALC_LENGTH = "calcLength",
+								COLUMN_VOLUME = "volume",
+								COLUMN_DIFFICULTY = "difficulty",
+								COLUMN_EFFORT = "effort";
 
 	@Option(description = "Show usage", names = { "-h" }, paramLabel="help")
 	static boolean showHelp;
@@ -145,30 +160,27 @@ public class Metrics implements Runnable{
 	 * Prints output header.
 	 */
 	private void printHeader() {
-		if (countLines) printHeader("lines", totalLines);
-		if (countWords) printHeader("words", totalWords);
-		if (countChars) printHeader("chars", totalChars);
-		if (countCode)  printHeader("source", totalCode);
-		if (countComments) printHeader("source", totalComments);
+		if (countLines) printHeader(COLUMN_LINES, totalLines);
+		if (countWords) printHeader(COLUMN_WORDS, totalWords);
+		if (countChars) printHeader(COLUMN_CHARS, totalChars);
+		if (countCode)  printHeader(COLUMN_SOURCE, totalCode);
+		if (countComments) printHeader(COLUMN_COMMENTS, totalComments);
 		if (calcHalstead) {
-			printHeader("operators", totalOperators);	
-			printHeader("operands", totalOperands);	
-			printHeader("unq operators", totalOperators);	
-			printHeader("unq operands", totalOperands);	
-			
-			printHeader("vocab", totalVocab);	
-			printHeader("length", totalLength);	
-			printHeader("calcLength", totalCalcLength);	
-			printHeader("volume", totalVolume);	
-			printHeader("difficulty", totalDifficulty);	
-			printHeader("effort", totalEffort);	
+			printHeader(COLUMN_OPERATORS, totalOperators);	
+			printHeader(COLUMN_OPERANDS, totalOperands);	
+			printHeader(COLUMN_UNIQUE_OPERATORS, totalUniqueOperators);	
+			printHeader(COLUMN_UNIQUE_OPERANDS, totalUniqueOperands);	
+		
+			printHeader(COLUMN_VOCAB, totalVocab);	
+			printHeader(COLUMN_LENGTH, totalLength);	
+			printHeader(COLUMN_CALC_LENGTH, totalCalcLength);	
+			printHeader(COLUMN_VOLUME, totalVolume);	
+			printHeader(COLUMN_DIFFICULTY, totalDifficulty);	
+			printHeader(COLUMN_EFFORT, totalEffort);	
 		}
-		System.out.printf(" %-10s%n", "filename");
+		System.out.printf(" %-20s%n", "filename");
 	}
-	
-	private void printHeader(String columnName, int metricTotal) {
-		System.out.printf("%"+ getColumnWidth(metricTotal, columnName.length()) +"s", columnName);
-	}
+
 	
 	/**
 	 * Master print method, used for printing individual node metrics as well as the total.
@@ -177,36 +189,29 @@ public class Metrics implements Runnable{
 						Integer totalOperators, Integer totalOperands, Integer uniqueOperators, Integer uniqueOperands,
 						Integer vocab, Integer length, Integer totalCalcLength, Integer volume, Integer difficulty, Integer effort,
 						String filename) {
-		if (countLines) printMetric(totalLines, "lines");
-		if (countWords) printMetric(totalWords, "words");
-		if (countChars) printMetric(totalChars, "chars");
+		if (countLines) printMetric(COLUMN_LINES, totalLines);
+		if (countWords) printMetric(COLUMN_WORDS, totalWords);
+		if (countChars) printMetric(COLUMN_CHARS, totalChars);
 		
-		if (countCode) printCodeMetric(totalCode, "source");
-		if (countComments) printCodeMetric(totalCode, "comment");
+		if (countCode) printCodeMetric(COLUMN_SOURCE, totalCode);
+		if (countComments) printCodeMetric(COLUMN_COMMENTS, totalCode);
 		if (calcHalstead) {
-			printCodeMetric(totalOperators, "operators");
-			printCodeMetric(totalOperands, "operands");
-			printCodeMetric(uniqueOperators, "unq operators");
-			printCodeMetric(uniqueOperands, "unq operands");
+			printCodeMetric(COLUMN_OPERATORS, totalOperators);
+			printCodeMetric(COLUMN_OPERANDS, totalOperands);
+			printCodeMetric(COLUMN_UNIQUE_OPERATORS, uniqueOperators);
+			printCodeMetric(COLUMN_UNIQUE_OPERANDS, uniqueOperands);
 
-			printCodeMetric(vocab, "vocab");
-			printCodeMetric(length, "length");
-			printCodeMetric(totalCalcLength, "totalCalcLength");
-			printCodeMetric(volume, "volume");
-			printCodeMetric(difficulty, "difficulty");
-			printCodeMetric(effort, "effort");
+			printCodeMetric(COLUMN_VOCAB, vocab);
+			printCodeMetric(COLUMN_LENGTH, length);
+			printCodeMetric(COLUMN_CALC_LENGTH, totalCalcLength);
+			printCodeMetric(COLUMN_VOLUME, volume);
+			printCodeMetric(COLUMN_DIFFICULTY, difficulty);
+			printCodeMetric(COLUMN_EFFORT, effort);
 			
 		}
 		System.out.printf(" %s%n", filename);
 	}
-	private void printMetric(int metric, String columnName) {
-		System.out.printf("%"+ getColumnWidth(metric, columnName.length()) + "s", new Integer(metric).toString());
-	}
 
-	private void printCodeMetric(int metric, String columnName) {
-		System.out.printf("%"+ getColumnWidth(metric, columnName.length()) + "s", metric > 0 ? new Integer(metric).toString() : "");
-	}
-	
 	/** Abstraction method for neatness.
 	 * @param toPrint Node whose metrics we want to print.
 	 */
@@ -235,154 +240,173 @@ public class Metrics implements Runnable{
 	 * @return
 	 */
 	private int getColumnWidth(int totalToMeasure, int minimumWidth) {		
-		return Math.max(new Integer(totalLines).toString().length()  + COLUMN_SEP_WIDTH, minimumWidth);
+		return Math.max(new Integer(totalLines).toString().length(), minimumWidth) + COLUMN_SEP_WIDTH;
+	}
+	
+	private void printHeader(String columnName, int metricTotal) {
+		System.out.printf("%"+ getColumnWidth(metricTotal, columnName.length()) +"s", columnName);
+	}
+	private void printMetric(String columnName, int metric) {
+		System.out.printf("%"+ getColumnWidth(metric, columnName.length()) + "s", new Integer(metric).toString());
 	}
 
+	private void printCodeMetric(String columnName, int metric) {
+		System.out.printf("%"+ getColumnWidth(metric, columnName.length()) + "s", metric > 0 ? new Integer(metric).toString() : "");
+	}
 	
-/** Metrics File Node class. Give it a file and it'll automatically accumulate appropriate metrics.
- */
-class metricsFileNode {
 
-	int lines, chars, words, linesOfCode, linesOfComment, totalOperators, totalOperands,
-		vocabulary, length, calcLength, volume, difficulty, effort;
-	Set<String> uniqueOperators = new HashSet<String>(), uniqueOperands = new HashSet<String>();
-	File file;
-	metricsFileNode next = null;
-	String ext = "";
-	private boolean currentlyBlockComment = false;
+		
+	/** Metrics File Node class. Give it a file and it'll automatically accumulate appropriate metrics.
+	 */
+	class metricsFileNode {
 	
-	public metricsFileNode(File toCount) {
-		this.file = toCount;
-		if (!file.exists()) throw new IllegalArgumentException("No file found matching '" + file.getName() + "'");
+		int lines, chars, words, linesOfCode, linesOfComment, totalOperators, totalOperands,
+			vocabulary, length, calcLength, volume, difficulty, effort;
+		Set<String> uniqueOperators = new HashSet<String>(), uniqueOperands = new HashSet<String>();
+		File file;
+		metricsFileNode next = null;
+		String ext = "";
+		private boolean currentlyBlockComment = false;
 		
-		ext = getFileExtension(file);
-		String line = null;
-		
-		BufferedReader reader = null;
-		try {
-			reader = new BufferedReader(new FileReader(file));
-			while (reader.read() > -1)
-				chars++;
-			reader.close();
-			reader = new BufferedReader(new FileReader(file)); //Reset reader to start reading lines
-			line = reader.readLine();
-			while (line != null) { 		
-				getLineMetrics(line);
+		public metricsFileNode(File toCount) {
+			this.file = toCount;
+			if (!file.exists()) throw new IllegalArgumentException("No file found matching '" + file.getName() + "'");
+			
+			ext = getFileExtension(file);
+			String line = null;
+			
+			BufferedReader reader = null;
+			try {
+				reader = new BufferedReader(new FileReader(file));
+				while (reader.read() > -1)
+					chars++;
+				reader.close();
+				reader = new BufferedReader(new FileReader(file)); //Reset reader to start reading lines
 				line = reader.readLine();
-			}
-			reader.close();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-			System.out.println("Argument could not be parsed as an argument or filename.");
-			System.exit(1);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			System.out.println("IO Exception while reading.");
-			System.exit(1);
-		}
-	}
-	private void getLineMetrics(String line) {
-		lines++;		
-		words += line.split("\\s+").length; 
-		if (	(countCode || countComments || calcHalstead) &&
-				!line.isEmpty() && 
-				(ext.equals(".c") || 
-				ext.equals(".java") || 
-				ext.equals(".cpp") || 
-				ext.equals(".h") || 
-				ext.equals(".hpp"))) {		
-				getCodeLineMetrics(line);
-		}
-	}
-	private void getCodeLineMetrics(String line) {
-			String codeLine = "";
-			//Count code and Comments
-			if (currentlyBlockComment && !line.contains("*/")) linesOfComment++; 
-				else if (line.contains("/*")) { //Does this line have a self-contained comment /*like this*/
-					linesOfComment++; 		
-					String before = line.substring(0, line.indexOf('*') - 1).trim(),
-							after = "";
-					if (line.contains("*/")) {
-						after = line.substring(line.lastIndexOf("*/") + 2).trim();
-					} else currentlyBlockComment = true;
-					if (before.length() > 1) { 
-						linesOfCode++; //Are there contents before the comment?
-						codeLine = before;
-					}
-					else if (after.length() > 2) {
-						codeLine = after;
-						linesOfCode++; //Are there contents after the comment?
-					}
-			} else if (line.contains("*/")) {
-					linesOfComment++;
-					currentlyBlockComment = false;
-					String after = line.substring(line.lastIndexOf("*/") + 2).trim();
-					if (after.length() > 2) {
-						codeLine = after;
-						linesOfCode++; //Are there contents after the comment?
-					}
-			}
-			else if (line.contains("//")) {
-				linesOfComment++;
-				String before = line.substring(0, line.indexOf("//")).trim();
-						
-				if (before.length() > 1) {
-					codeLine = before;
-					linesOfCode++;
+				while (line != null) { 		
+					getLineMetrics(line);
+					line = reader.readLine();
 				}
-			} else  {
-				linesOfCode++;	
-				codeLine = line;
+				reader.close();
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+				System.out.println("Argument could not be parsed as an argument or filename.");
+				System.exit(1);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				System.out.println("IO Exception while reading.");
+				System.exit(1);
 			}
-	
-	
-	//Halstead Metrics
-	
-	if (calcHalstead && !currentlyBlockComment && codeLine.length() > 1) {
-		Set<String> keywords = new HashSet<String>(Arrays.asList("one", "of",
-				"abstract", "continue", "for", "new", "switch",
-				"assert", "default", "if", "package", "synchronized",
-				"boolean", "do", "goto", "private", "this",
-				"break", "double", "implements", "protected", "throw",
-				"byte", "else", "import", "public", "throws",
-				"case", "enum", "instanceof", "return", "transient",
-				"catch", "extends", "int", "short", "try",
-				"char", "final", "interface", "static", "void",
-				"class", "finally", "long", "strictfp", "volatile",
-				"const", "float", "native", "super", "while"));
-	    String operatorsRegex = "(=)|(>)|(<)|(!)|(~)|(/?)|(:)|(==)|(<=)|(>=)|(!=)|(&&)|(/|/|)|(/+/+)|(--)|(/+)|(-)|(/*)|(/)|(&)|(/|)|(^)|(%)|(<<)|(>>)|(>>>)|(/+=)|(-=)|(/*=)|(/=)|(&=)|(/|=)|(^=)|(%=)|(<<=)|(>>=)|(>>>=)"; 
-	    //Keywords and ops regex shamelessly borrowed from https://www.daniweb.com/programming/software-development/threads/307653/halstead-metrics
-	    String operandsRegex = "(\\w+)|(\\d+)";
-	    
-	    
-	    Matcher operatorsMatcher = Pattern.compile(operatorsRegex).matcher(codeLine);
-	    Matcher operandsMatcher = Pattern.compile(operandsRegex).matcher(codeLine);
-	
-		  while (operatorsMatcher.find()) {
-			  	String group = operatorsMatcher.group();
-			  	if (group.length() > 0) {
-			       uniqueOperators.add(group);
-			       totalOperators++;
-			  	}
-		   }
-		  while (operandsMatcher.find()) {
-			   String group = operandsMatcher.group();
-		       if (group.length() > 0  && !keywords.contains(group)) {
-			       uniqueOperands.add(group);
-			       totalOperands++;
-			  	}
-		   }
-	
-		System.out.println(	"Code: " + codeLine + 
-				"\n	Operators: " + uniqueOperators.toString() + 
-				"\n	Operands: " + uniqueOperands.toString());
-		vocabulary = uniqueOperators.size() + uniqueOperands.size();
-		length = totalOperators + totalOperands;
+		}
+		private void getLineMetrics(String line) {
+			lines++;		
+			words += line.split("\\s+").length; 
+			if (	(countCode || countComments || calcHalstead) &&
+					!line.isEmpty() && 
+					(ext.equals(".c") || 
+					ext.equals(".java") || 
+					ext.equals(".cpp") || 
+					ext.equals(".h") || 
+					ext.equals(".hpp"))) {		
+					getCodeLineMetrics(line);
+			}
+		}
+		private void getCodeLineMetrics(String line) {
+				String codeLine = "";
+				//Count code and Comments
+				if (currentlyBlockComment && !line.contains("*/")) linesOfComment++; 
+					else if (line.contains("/*")) { //Does this line have a self-contained comment /*like this*/
+						linesOfComment++; 		
+						String before = line.substring(0, line.indexOf('*') - 1).trim(),
+								after = "";
+						if (line.contains("*/")) {
+							after = line.substring(line.lastIndexOf("*/") + 2).trim();
+						} else currentlyBlockComment = true;
+						if (before.length() > 1) { 
+							linesOfCode++; //Are there contents before the comment?
+							codeLine = before;
+						}
+						else if (after.length() > 2) {
+							codeLine = after;
+							linesOfCode++; //Are there contents after the comment?
+						}
+				} else if (line.contains("*/")) {
+						linesOfComment++;
+						currentlyBlockComment = false;
+						String after = line.substring(line.lastIndexOf("*/") + 2).trim();
+						if (after.length() > 2) {
+							codeLine = after;
+							linesOfCode++; //Are there contents after the comment?
+						}
+				}
+				else if (line.contains("//")) {
+					linesOfComment++;
+					String before = line.substring(0, line.indexOf("//")).trim();
+							
+					if (before.length() > 1) {
+						codeLine = before;
+						linesOfCode++;
+					}
+				} else  {
+					linesOfCode++;	
+					codeLine = line;
+				}
 		
-	}
+		
+		//Halstead Metrics
+		
+		if (calcHalstead && !currentlyBlockComment && codeLine.length() > 1) {
+			Set<String> keywords = new HashSet<String>(Arrays.asList("one", "of",
+					"abstract", "continue", "for", "new", "switch",
+					"assert", "default", "if", "package", "synchronized",
+					"boolean", "do", "goto", "private", "this",
+					"break", "double", "implements", "protected", "throw",
+					"byte", "else", "import", "public", "throws",
+					"case", "enum", "instanceof", "return", "transient",
+					"catch", "extends", "int", "short", "try",
+					"char", "final", "interface", "static", "void",
+					"class", "finally", "long", "strictfp", "volatile",
+					"const", "float", "native", "super", "while"));
+		    String operatorsRegex = "(=)|(>)|(<)|(!)|(~)|(/?)|(:)|(==)|(<=)|(>=)|(!=)|(&&)|(/|/|)|(/+/+)|(--)|(/+)|(-)|(/*)|(/)|(&)|(/|)|(^)|(%)|(<<)|(>>)|(>>>)|(/+=)|(-=)|(/*=)|(/=)|(&=)|(/|=)|(^=)|(%=)|(<<=)|(>>=)|(>>>=)"; 
+		    //Keywords and ops regex shamelessly borrowed from https://www.daniweb.com/programming/software-development/threads/307653/halstead-metrics
+		    String operandsRegex = "(\\w+)|(\\d+)";
+		    
+		    
+		    Matcher operatorsMatcher = Pattern.compile(operatorsRegex).matcher(codeLine);
+		    Matcher operandsMatcher = Pattern.compile(operandsRegex).matcher(codeLine);
+		
+			  while (operatorsMatcher.find()) {
+				  	String group = operatorsMatcher.group();
+				  	if (group.length() > 0) {
+				       uniqueOperators.add(group);
+				       totalOperators++;
+				  	}
+			   }
+			  while (operandsMatcher.find()) {
+				   String group = operandsMatcher.group();
+			       if (group.length() > 0  && !keywords.contains(group)) {
+				       uniqueOperands.add(group);
+				       totalOperands++;
+				  	}
+			   }
+		
+				System.out.println(	"Code: " + codeLine + 
+						"\n	Operators: " + uniqueOperators.toString() + 
+						"\n	Operands: " + uniqueOperands.toString());
+				vocabulary = uniqueOperators.size() + uniqueOperands.size();
+				length = totalOperators + totalOperands;
+				calcLength = uniqueOperators.size() * log2(uniqueOperators.size()) + uniqueOperands.size()*log2(uniqueOperands.size());
+				volume = totalOperators * log2(vocabulary);
+				difficulty = uniqueOperands.size() > 0 ? (uniqueOperators.size() / 2) * (totalOperands / uniqueOperands.size()) : 0;
+				effort = volume > 0 ? difficulty/volume : 0;
+		}
+		
 	
-
-	}
+		}
+		
+		private int log2(double n) {
+			return (int) Math.round(Math.log(n)/Math.log(2));
+		}
 	}
 }
