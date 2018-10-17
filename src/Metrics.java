@@ -298,23 +298,40 @@ class metricsFileNode {
 			//Halstead Metrics
 
 			if (calcHalstead && !currentlyBlockComment && codeLine.length() > 1) {
-				//break into tokens
-				//for each token:
-				//	if operator, add to operators, increment totalOperators
-				//  if operand, add to operands, increment totalOperands
-				
-			    String operatorsRegex = "(>=)|(=<)|(&&)|(||)|(/)|([+-/*///^=])|([/(/)])"; //Regex shamelessly borrowed from https://stackoverflow.com/questions/12871958/extract-numbers-and-operators-from-a-string
+				Set<String> keywords = new HashSet<String>(Arrays.asList("one", "of",
+						"abstract", "continue", "for", "new", "switch",
+						"assert", "default", "if", "package", "synchronized",
+						"boolean", "do", "goto", "private", "this",
+						"break", "double", "implements", "protected", "throw",
+						"byte", "else", "import", "public", "throws",
+						"case", "enum", "instanceof", "return", "transient",
+						"catch", "extends", "int", "short", "try",
+						"char", "final", "interface", "static", "void",
+						"class", "finally", "long", "strictfp", "volatile",
+						"const", "float", "native", "super", "while"));
+			    String operatorsRegex = "(=)|(>)|(<)|(!)|(~)|(/?)|(:)|(==)|(<=)|(>=)|(!=)|(&&)|(/|/|)|(/+/+)|(--)|(/+)|(-)|(/*)|(/)|(&)|(/|)|(^)|(%)|(<<)|(>>)|(>>>)|(/+=)|(-=)|(/*=)|(/=)|(&=)|(|=)|(^=)|(%=)|(<<=)|(>>=)|(>>>=)"; 
+			    //Keywords and ops regex shamelessly borrowed from https://www.daniweb.com/programming/software-development/threads/307653/halstead-metrics
 			    String operandsRegex = "(\\w+)|(\\d+)";
+			    
+			    
 			    Matcher operatorsMatcher = Pattern.compile(operatorsRegex).matcher(codeLine);
 			    Matcher operandsMatcher = Pattern.compile(operandsRegex).matcher(codeLine);
-			    
+
 				  while (operatorsMatcher.find()) {
-				       operators.add(operatorsMatcher.group());
-				       totalOperators++;
+					  	String group = operatorsMatcher.group();
+					  	if (group.length() > 0 && !keywords.contains(group)) {
+						  	System.out.print(group);
+					       operators.add(group);
+					       totalOperators++;
+					  	}
 				   }
 				  while (operandsMatcher.find()) {
-				       operands.add(operandsMatcher.group());
-				       totalOperands++;
+					   String group = operandsMatcher.group();
+				       if (group.length() > 0) {
+						  	System.out.print(group);
+					       operands.add(group);
+					       totalOperands++;
+					  	}
 				   }
 
 				System.out.println(	"Codeline: " + codeLine + 
