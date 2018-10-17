@@ -255,6 +255,25 @@ class metricsFileNode {
 				//	if operator, add to operators, increment totalOperators
 				//  if operand, add to operands, increment totalOperands
 				
+			    String operatorsRegex = "([+-/*///^=])|([/(/)])"; //Regex shamelessly borrowed from https://stackoverflow.com/questions/12871958/extract-numbers-and-operators-from-a-string
+			    String operandsRegex = "(\\w+)|(\\d+)";
+			    Matcher operatorsMatcher = Pattern.compile(operatorsRegex).matcher(codeLine);
+			    Matcher operandsMatcher = Pattern.compile(operandsRegex).matcher(codeLine);
+			    
+				  while (operatorsMatcher.find()) {
+				       operators.add(operatorsMatcher.group());
+				       totalOperators++;
+				   }
+				  while (operandsMatcher.find()) {
+				       operands.add(operandsMatcher.group());
+				       totalOperands++;
+				   }
+
+				System.out.println("Line : " + line + 
+						"\nCodeline: " + codeLine + 
+						"\nOperators: " + operators.toString() + 
+						"\nOperands: " + operands.toString());
+				
 			}
 			
 			try { //Get next line; if null the loop breaks here
