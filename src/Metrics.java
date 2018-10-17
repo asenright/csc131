@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import picocli.CommandLine;
 import picocli.CommandLine.*;
@@ -20,7 +21,6 @@ import picocli.CommandLine.*;
 @Command(description="Prints metrics of the given file to STDOUT.",	name="Metrics")
 public class Metrics implements Runnable{
 	private static final int COLUMN_SEP_WIDTH = 1; //Amount of whitespace to put between columns.
-	private static final String NOT_APPLICABLE = "n/a";
 
 	private static void printUsage() {
 		System.out.println("Usage: 'java Metrics <-l|-c|-w> filename1 filename2 ... filenameN'"
@@ -140,8 +140,8 @@ public class Metrics implements Runnable{
 		if (countLines) System.out.printf("%"+ getColumnWidth(totalLines, 7) +"d", lines);
 		if (countWords) System.out.printf("%"+ getColumnWidth(totalWords, 7) +"d", words);
 		if (countChars) System.out.printf("%"+ getColumnWidth(totalChars, 7 )+"d", chars);
-		if (countCode) System.out.printf("%"+ getColumnWidth(totalCode, 8) + "s", linesCode > 0 ? new Integer(linesCode).toString() : NOT_APPLICABLE);
-		if (countComments) System.out.printf("%"+ getColumnWidth(totalComments, 10) + "s", linesComment > 0 ? new Integer(linesComment).toString() : NOT_APPLICABLE);
+		if (countCode) System.out.printf("%"+ getColumnWidth(totalCode, 8) + "s", linesCode > 0 ? new Integer(linesCode).toString() : "");
+		if (countComments) System.out.printf("%"+ getColumnWidth(totalComments, 10) + "s", linesComment > 0 ? new Integer(linesComment).toString() : "");
 		
 		System.out.printf(" %s%n", filename);
 	}
@@ -167,8 +167,19 @@ class metricsFileNode {
 		BufferedReader reader = null;
 		try {
 			reader = new BufferedReader(new FileReader(file));
+			while (reader.read() > -1)
+				chars++;
+			reader.close();
+			reader = new BufferedReader(new FileReader(file));
+
 		} catch (FileNotFoundException e) {
+			e.printStackTrace();
 			System.out.println("Argument could not be parsed as an argument or filename.");
+			System.exit(1);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			System.out.println("IO Exception while reading.");
 			System.exit(1);
 		}
 		String line = null;
@@ -181,21 +192,19 @@ class metricsFileNode {
 	
 		boolean currentlyBlockComment = false;
 		while (line != null) {
-			line = line.replace("\t", "").replace("\n", "");
 			lines++;		
-			chars += line.length() ;  	//The Unix WC utility includes CR and LF characters in its count; String.length does not.
 			words += line.split("\\s+").length; 
 					
-			if ((countCode || countComments) && 
-					!line.isEmpty() && 
+			if (	!line.isEmpty() && 
 					(ext.equals(".c") || 
 					ext.equals(".java") || 
 					ext.equals(".cpp") || 
 					ext.equals(".h") || 
 					ext.equals(".hpp"))) {
-				
 					//Halstead Metrics
+					StringTokenizer tok = new StringTokenizer(line);
 					
+				
 					//Count code and Comments
 					if (currentlyBlockComment && !line.contains("*/")) linesOfComment++; 
 						else if (line.contains("/*")) { //Does this line have a self-contained comment /*like this*/
@@ -237,19 +246,4 @@ class metricsFileNode {
 		}
 	}
 }
-}
-
-class metricsLib {
-		public static int countCode(String toCount){
-			return 0;
-		}
-		public static int countComments(String toCount) {
-			return 0;
-		}
-		public static int countOperators(String toCount) {
-			return 0;
-		}
-		public static int countOperands(String toCount) {
-			return 0;
-		}
 }
