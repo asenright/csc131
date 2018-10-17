@@ -84,18 +84,11 @@ public class Metrics implements Runnable{
 			System.exit(0);
 			}
 		
-	
-		
 		gatherFileMetrics(listHead);	
 		printHeader();
-		for (metricsFileNode lastListItem : listHead) formattedPrint(	lastListItem.lines, 
-				lastListItem.words, 
-				lastListItem.chars, 
-				lastListItem.linesOfCode,
-				lastListItem.linesOfComment,
-				lastListItem.file.getPath());
+		for (metricsFileNode lastListItem : listHead) formattedPrint(lastListItem);
 		if (listHead.size() > 1) 
-			formattedPrint(totalLines, totalWords, totalChars, totalCode, totalComments, "total");
+			formattedPrint(this);
 	}
 	
 	private void gatherFileMetrics(LinkedList<metricsFileNode> listHead) {
@@ -105,6 +98,10 @@ public class Metrics implements Runnable{
 			totalLines += lastListItem.lines;
 			totalCode += lastListItem.linesOfCode;
 			totalComments += lastListItem.linesOfComment;
+			totalOperators += lastListItem.totalOperators;
+			totalOperands += lastListItem.totalOperands;
+			totalUniqueOperators += lastListItem.operators.size();
+			totalUniqueOperands += lastListItem.operands.size();
 		}
 	}
 	
@@ -138,15 +135,17 @@ public class Metrics implements Runnable{
 		if (countCode) System.out.printf("%"+ getColumnWidth(totalCode, 8) + "s", "source");
 		if (countComments) System.out.printf("%"+ getColumnWidth(totalComments, 10) + "s", "comments");
 		if (calcHalstead) {
-			System.out.printf("%"+ getColumnWidth(totalOperators, 15) + "s", "total operators");		
-			System.out.printf("%"+ getColumnWidth(totalOperators, 15) + "s", "total operands");
-			System.out.printf("%"+ getColumnWidth(totalOperators, 15) + "s", "unique operators");
-			System.out.printf("%"+ getColumnWidth(totalOperators, 15) + "s", "unique operands");
+			System.out.printf("%"+ getColumnWidth(totalOperators, 10) + "s", "operators");		
+			System.out.printf("%"+ getColumnWidth(totalOperands, 8) + "s", "operands");
+			System.out.printf("%"+ getColumnWidth(totalOperators, 14) + "s", "unq operators");
+			System.out.printf("%"+ getColumnWidth(totalOperands, 12) + "s", "unq operands");
 		}
 		System.out.printf(" %-10s%n", "filename");
 	}
 	
-	private void formattedPrint(Integer lines, Integer words, Integer chars, Integer linesCode, Integer linesComment, Integer uniqueOperators, Integer uniqueOperands, String filename) {
+	private void formattedPrint(Integer lines, Integer words, Integer chars, Integer linesCode, Integer linesComment, 
+						Integer totalOperators, Integer totalOperands, Integer uniqueOperators, Integer uniqueOperands,
+						String filename) {
 		if (countLines) System.out.printf("%"+ getColumnWidth(totalLines, 7) +"d", lines);
 		if (countWords) System.out.printf("%"+ getColumnWidth(totalWords, 7) +"d", words);
 		if (countChars) System.out.printf("%"+ getColumnWidth(totalChars, 7 )+"d", chars);
@@ -161,10 +160,24 @@ public class Metrics implements Runnable{
 		System.out.printf(" %s%n", filename);
 	}
 	
+	private void formattedPrint(metricsFileNode toPrint) {
+		formattedPrint(toPrint.lines, toPrint.words, toPrint.chars, toPrint.linesOfCode, toPrint.linesOfComment, 
+					toPrint.totalOperators, toPrint.totalOperands, toPrint.operators.size(), toPrint.operators.size(),
+					toPrint.file.getName());
+}
+	/* Default formattedPrint will print the 
+	 * 
+	 */
+	private void formattedPrint(Metrics toPrint) {
+		formattedPrint(toPrint.totalLines, toPrint.totalWords, toPrint.totalChars, toPrint.totalCode, toPrint.totalComments, 
+				toPrint.totalOperators, toPrint.totalOperands, toPrint.totalUniqueOperators, toPrint.totalUniqueOperands,
+					"total" );
+}
+	
 	private int getColumnWidth(int totalToMeasure, int minimumWidth) {		
 		return Math.max(new Integer(totalLines).toString().length()  + COLUMN_SEP_WIDTH, minimumWidth);
 	}
-	
+
 class metricsFileNode {
 	int lines, chars, words, linesOfCode, linesOfComment, totalOperators, totalOperands;
 	Set<String> operators = new HashSet<String>(), operands = new HashSet<String>();
@@ -265,7 +278,7 @@ class metricsFileNode {
 				//	if operator, add to operators, increment totalOperators
 				//  if operand, add to operands, increment totalOperands
 				
-			    String operatorsRegex = "(>?)|(?<)|([+-/*///^=])|([/(/)])"; //Regex shamelessly borrowed from https://stackoverflow.com/questions/12871958/extract-numbers-and-operators-from-a-string
+			    String operatorsRegex = "(>=)|(=<)|(&&)|(||)|(/)|([+-/*///^=])|([/(/)])"; //Regex shamelessly borrowed from https://stackoverflow.com/questions/12871958/extract-numbers-and-operators-from-a-string
 			    String operandsRegex = "(\\w+)|(\\d+)";
 			    Matcher operatorsMatcher = Pattern.compile(operatorsRegex).matcher(codeLine);
 			    Matcher operandsMatcher = Pattern.compile(operandsRegex).matcher(codeLine);
@@ -279,8 +292,7 @@ class metricsFileNode {
 				       totalOperands++;
 				   }
 
-				System.out.println("Line : " + line + 
-						"\nCodeline: " + codeLine + 
+				System.out.println(	"Codeline: " + codeLine + 
 						"\nOperators: " + operators.toString() + 
 						"\nOperands: " + operands.toString());
 				
