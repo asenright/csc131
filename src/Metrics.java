@@ -20,23 +20,13 @@ import java.util.regex.Pattern;
 import picocli.CommandLine;
 import picocli.CommandLine.*;
 
-
+/*Wrapper class for Metrics*/
 @Command(description="Prints metrics of the given file to STDOUT.",	name="Metrics")
 public class Metrics implements Runnable{
 	private static final int COLUMN_SEP_WIDTH = 1; //Amount of whitespace to put between columns.
 
-	private static void printUsage() {
-		System.out.println("Usage: 'java Metrics <-l|-c|-w> filename1 filename2 ... filenameN'"
-				+ "\n'java Metrics  -l <filename>' will print the line count of all specified files"
-				+ "\n'java Metrics  -c <filename>' will print the character count"
-				+ "\n'java Metrics  -w <filename>' will print the word count"
-				+ "\n'java Metrics  <filename>' will print all of the above"
-				+ "\n'java Metrics  -l -c filename1 filename2' will print line and char counts for filename1 and filename2" 
-				);
-			System.exit(0);
-	}
-	@Option(description = "Show usage", names = { "-h" }, paramLabel="help") 
-	boolean showHelp;
+	@Option(description = "Show usage", names = { "-h" }, paramLabel="help")
+	static boolean showHelp;
 	
 	@Option(description = "Count number of lines", names = { "-l" }, paramLabel="countLines") 
 	boolean countLines;
@@ -64,8 +54,11 @@ public class Metrics implements Runnable{
 	private LinkedList<metricsFileNode> listHead = null;	
 	
 	public static void main(String[] args) {		
-		if (args.length == 0 ) printUsage();
 		Metrics wordCounterInstance = new Metrics();
+		if (args.length == 0 || showHelp ) {
+			CommandLine.usage(wordCounterInstance, System.err);
+			System.exit(0);
+		}
 		CommandLine.run(wordCounterInstance, args);
 	}
 	
@@ -74,15 +67,14 @@ public class Metrics implements Runnable{
 		if (!countLines && !countWords && !countChars && !countCode && !countComments) 			
 			countLines = countWords = countChars = countCode = countComments = calcHalstead = true ;	
 		
-		if (showHelp) printUsage();
 		listHead = new LinkedList<metricsFileNode>();
 		
-		try { populateList(files, listHead); }
+		try { populateMetricsFileNodeList(files, listHead); }
 		catch (Exception e) { 
 			System.out.println("Error encountered populating list : " + e.getMessage());
 			e.printStackTrace();
 			System.exit(0);
-			}
+		}
 		
 		gatherFileMetrics(listHead);	
 		printHeader();
@@ -91,8 +83,11 @@ public class Metrics implements Runnable{
 			formattedPrint(this);
 	}
 	
-	private void gatherFileMetrics(LinkedList<metricsFileNode> listHead) {
-		for (metricsFileNode lastListItem : listHead) {
+	/** Gathers total metrics from specified list.
+	 * @param fileList List of items to iterate over.
+	 */
+	private void gatherFileMetrics(LinkedList<metricsFileNode> fileList) {
+		for (metricsFileNode lastListItem : fileList) {
 			totalWords += lastListItem.words;
 			totalChars += lastListItem.chars;
 			totalLines += lastListItem.lines;
@@ -105,7 +100,11 @@ public class Metrics implements Runnable{
 		}
 	}
 	
-	//Credit to technicalkeeda.com for getFileExtension()
+	
+	/**Credit to technicalkeeda.com for getFileExtension()
+	 * @param file File to get extension from.
+	 * @return Returns the extension of the file.
+	 */
 	private String getFileExtension(File file) {
 		String extension = "";
 		try {
@@ -120,7 +119,12 @@ public class Metrics implements Runnable{
 		return extension;
 	}
 
-	private void populateList(List<File> files, LinkedList<metricsFileNode> listHead) throws FileNotFoundException {
+	/** Populates a linkedList of MetricsFileNodes with the given List of Files.
+	 * @param files List of files.
+	 * @param listHead List of MetricsFileNodes.
+	 * @throws FileNotFoundException Throws if file not found.
+	 */
+	private void populateMetricsFileNodeList(List<File> files, LinkedList<metricsFileNode> listHead) throws FileNotFoundException {
 		for (File current : files) {
 				if (!current.exists()) throw new FileNotFoundException("Could not find file " + current.getName());
 				metricsFileNode tmp = new metricsFileNode(current);
@@ -128,6 +132,10 @@ public class Metrics implements Runnable{
 			}	
 	}
 
+	
+	/**
+	 * Prints output header.
+	 */
 	private void printHeader() {
 		if (countLines) System.out.printf("%"+ getColumnWidth(totalLines, 7) +"s", "lines");
 		if (countWords) System.out.printf("%"+ getColumnWidth(totalWords, 7) +"s", "words");
@@ -136,13 +144,16 @@ public class Metrics implements Runnable{
 		if (countComments) System.out.printf("%"+ getColumnWidth(totalComments, 10) + "s", "comments");
 		if (calcHalstead) {
 			System.out.printf("%"+ getColumnWidth(totalOperators, 10) + "s", "operators");		
-			System.out.printf("%"+ getColumnWidth(totalOperands, 8) + "s", "operands");
+			System.out.printf("%"+ getColumnWidth(totalOperands, 10) + "s", "operands");
 			System.out.printf("%"+ getColumnWidth(totalOperators, 14) + "s", "unq operators");
 			System.out.printf("%"+ getColumnWidth(totalOperands, 12) + "s", "unq operands");
 		}
 		System.out.printf(" %-10s%n", "filename");
 	}
 	
+	/**
+	 * Master print method, used for printing individual node metrics as well as the total.
+	 */
 	private void formattedPrint(Integer lines, Integer words, Integer chars, Integer linesCode, Integer linesComment, 
 						Integer totalOperators, Integer totalOperands, Integer uniqueOperators, Integer uniqueOperands,
 						String filename) {
@@ -152,21 +163,27 @@ public class Metrics implements Runnable{
 		if (countCode) System.out.printf("%"+ getColumnWidth(totalCode, 8) + "s", linesCode > 0 ? new Integer(linesCode).toString() : "");
 		if (countComments) System.out.printf("%"+ getColumnWidth(totalComments, 10) + "s", linesComment > 0 ? new Integer(linesComment).toString() : "");
 		if (calcHalstead) {
-			System.out.printf("%"+ getColumnWidth(totalOperators, 10) + "s", linesComment > 0 ? new Integer(linesComment).toString() : "");
-			System.out.printf("%"+ getColumnWidth(totalOperands, 10) + "s", linesComment > 0 ? new Integer(linesComment).toString() : "");
-			System.out.printf("%"+ getColumnWidth(uniqueOperators, 10) + "s", linesComment > 0 ? new Integer(linesComment).toString() : "");
-			System.out.printf("%"+ getColumnWidth(uniqueOperands, 10) + "s", linesComment > 0 ? new Integer(linesComment).toString() : "");
+			System.out.printf("%"+ getColumnWidth(totalOperators, 10) + "s", totalOperators > 0 ? new Integer(totalOperators).toString() : "");
+			System.out.printf("%"+ getColumnWidth(totalOperands, 10) + "s", totalOperands > 0 ? new Integer(totalOperands).toString() : "");
+			System.out.printf("%"+ getColumnWidth(uniqueOperators, 12) + "s", uniqueOperators > 0 ? new Integer(uniqueOperators).toString() : "");
+			System.out.printf("%"+ getColumnWidth(uniqueOperands, 14) + "s", uniqueOperands > 0 ? new Integer(uniqueOperands).toString() : "");
 		}
 		System.out.printf(" %s%n", filename);
 	}
 	
+	
+	/** Abstraction method for neatness.
+	 * @param toPrint Node whose metrics we want to print.
+	 */
 	private void formattedPrint(metricsFileNode toPrint) {
 		formattedPrint(toPrint.lines, toPrint.words, toPrint.chars, toPrint.linesOfCode, toPrint.linesOfComment, 
-					toPrint.totalOperators, toPrint.totalOperands, toPrint.operators.size(), toPrint.operators.size(),
+					toPrint.totalOperators, toPrint.totalOperands, toPrint.operators.size(), toPrint.operands.size(),
 					toPrint.file.getName());
-}
-	/* Default formattedPrint will print the 
-	 * 
+	}
+	
+	
+	/** Abstraction method for neatness. Prints totals of the given Metrics object.
+	 * @param toPrint Metrics object whose totals are to be printed.
 	 */
 	private void formattedPrint(Metrics toPrint) {
 		formattedPrint(toPrint.totalLines, toPrint.totalWords, toPrint.totalChars, toPrint.totalCode, toPrint.totalComments, 
@@ -174,10 +191,18 @@ public class Metrics implements Runnable{
 					"total" );
 }
 	
+	/** Printing helper method for managing column width.
+	 * @param totalToMeasure Integer in column
+	 * @param minimumWidth Narrowest column width returnable, usually the label width
+	 * @return
+	 */
 	private int getColumnWidth(int totalToMeasure, int minimumWidth) {		
 		return Math.max(new Integer(totalLines).toString().length()  + COLUMN_SEP_WIDTH, minimumWidth);
 	}
 
+	
+/** Metrics File Node class. Give it a file and it'll automatically accumulate appropriate metrics.
+ */
 class metricsFileNode {
 	int lines, chars, words, linesOfCode, linesOfComment, totalOperators, totalOperands;
 	Set<String> operators = new HashSet<String>(), operands = new HashSet<String>();
