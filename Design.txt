@@ -22,10 +22,11 @@ for Dr. Posnett, CSU Sacramento, Fall 2018
 
 /////////Runtime Arguments///////////////////
 	When run, Metrics will create a Metrics object and call it to run. 
-	The arguments given (-l, -c, -w, -s, -C) determine which metrics are displayed. 
+	The arguments given (-l, -c, -w, -s, -C, -H) determine which metrics are displayed. 
 		-l will show lines in a file, -c will show number of characters, -w shows number of words.
 		-s shows number of lines containing source code and -C shows number of lines containing comments.
 		-s and -C are only counted for files ending in .c, .cpp, .java, .h, and .hpp.
+		-H gives Halstead metrics of a file.
 	These arguments will be POSIX-groupable- that is, "java Metrics -l test.txt -w" should have the same 		
 		results as "java Metrics -lw test.txt".
 	File names will be wild-cardable; if there are two files in a folder "test.txt" and "hamlet.txt"
@@ -46,3 +47,12 @@ for Dr. Posnett, CSU Sacramento, Fall 2018
 
 	If no files are listed, or if a specified file cannot be found, Metrics
 	will print out a usage message. 
+
+
+/////////Halstead metrics Algorithm///////////////
+	Halstead metrics will be gathered using mostly existing framework. 
+	Since we already separate lines of code from lines of comment, we can use that 
+	to get just lines of code, and use regex matchers to sort these codeLines into tokens (one set for operators, one set for operands).
+	Then add the number of tokens to total operators/operands, and the tokens themselves into the sets of unique operators and operands.
+	Halstead metrics are calculated from those four primitives.
+	

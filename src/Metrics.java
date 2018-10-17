@@ -137,17 +137,27 @@ public class Metrics implements Runnable{
 		if (countChars) System.out.printf("%"+ getColumnWidth(totalChars, 7 )+"s", "chars");
 		if (countCode) System.out.printf("%"+ getColumnWidth(totalCode, 8) + "s", "source");
 		if (countComments) System.out.printf("%"+ getColumnWidth(totalComments, 10) + "s", "comments");
-				
+		if (calcHalstead) {
+			System.out.printf("%"+ getColumnWidth(totalOperators, 15) + "s", "total operators");		
+			System.out.printf("%"+ getColumnWidth(totalOperators, 15) + "s", "total operands");
+			System.out.printf("%"+ getColumnWidth(totalOperators, 15) + "s", "unique operators");
+			System.out.printf("%"+ getColumnWidth(totalOperators, 15) + "s", "unique operands");
+		}
 		System.out.printf(" %-10s%n", "filename");
 	}
 	
-	private void formattedPrint(Integer lines, Integer words, Integer chars, Integer linesCode, Integer linesComment, String filename) {
+	private void formattedPrint(Integer lines, Integer words, Integer chars, Integer linesCode, Integer linesComment, Integer uniqueOperators, Integer uniqueOperands, String filename) {
 		if (countLines) System.out.printf("%"+ getColumnWidth(totalLines, 7) +"d", lines);
 		if (countWords) System.out.printf("%"+ getColumnWidth(totalWords, 7) +"d", words);
 		if (countChars) System.out.printf("%"+ getColumnWidth(totalChars, 7 )+"d", chars);
 		if (countCode) System.out.printf("%"+ getColumnWidth(totalCode, 8) + "s", linesCode > 0 ? new Integer(linesCode).toString() : "");
 		if (countComments) System.out.printf("%"+ getColumnWidth(totalComments, 10) + "s", linesComment > 0 ? new Integer(linesComment).toString() : "");
-		
+		if (calcHalstead) {
+			System.out.printf("%"+ getColumnWidth(totalOperators, 10) + "s", linesComment > 0 ? new Integer(linesComment).toString() : "");
+			System.out.printf("%"+ getColumnWidth(totalOperands, 10) + "s", linesComment > 0 ? new Integer(linesComment).toString() : "");
+			System.out.printf("%"+ getColumnWidth(uniqueOperators, 10) + "s", linesComment > 0 ? new Integer(linesComment).toString() : "");
+			System.out.printf("%"+ getColumnWidth(uniqueOperands, 10) + "s", linesComment > 0 ? new Integer(linesComment).toString() : "");
+		}
 		System.out.printf(" %s%n", filename);
 	}
 	
@@ -255,7 +265,7 @@ class metricsFileNode {
 				//	if operator, add to operators, increment totalOperators
 				//  if operand, add to operands, increment totalOperands
 				
-			    String operatorsRegex = "([+-/*///^=])|([/(/)])"; //Regex shamelessly borrowed from https://stackoverflow.com/questions/12871958/extract-numbers-and-operators-from-a-string
+			    String operatorsRegex = "(>?)|(?<)|([+-/*///^=])|([/(/)])"; //Regex shamelessly borrowed from https://stackoverflow.com/questions/12871958/extract-numbers-and-operators-from-a-string
 			    String operandsRegex = "(\\w+)|(\\d+)";
 			    Matcher operatorsMatcher = Pattern.compile(operatorsRegex).matcher(codeLine);
 			    Matcher operandsMatcher = Pattern.compile(operandsRegex).matcher(codeLine);
