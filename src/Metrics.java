@@ -8,11 +8,14 @@
 *  Credit to https://www.geeksforgeeks.org/print-unique-words-string/ for unique words in string
 */
 import java.io.*;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import picocli.CommandLine;
 import picocli.CommandLine.*;
@@ -67,6 +70,10 @@ public class Metrics implements Runnable{
 	}
 	
 	public void run() {		
+		//No argument specified? Print all metrics
+		if (!countLines && !countWords && !countChars && !countCode && !countComments) 			
+			countLines = countWords = countChars = countCode = countComments = calcHalstead = true ;	
+		
 		if (showHelp) printUsage();
 		listHead = new LinkedList<metricsFileNode>();
 		
@@ -77,9 +84,7 @@ public class Metrics implements Runnable{
 			System.exit(0);
 			}
 		
-		//No argument specified? Print all metrics
-		if (!countLines && !countWords && !countChars && !countCode && !countComments) 			
-			countLines = countWords = countChars = countCode = countComments = true;		
+	
 		
 		gatherFileMetrics(listHead);	
 		printHeader();
@@ -162,7 +167,6 @@ class metricsFileNode {
 		if (!file.exists()) throw new IllegalArgumentException("No file found matching '" + file.getName() + "'");
 		
 		ext = getFileExtension(file);
-		System.out.println("File " + file.getName() + " is a dirty rotten " + ext);
 		
 		BufferedReader reader = null;
 		try {
@@ -194,41 +198,64 @@ class metricsFileNode {
 		while (line != null) {
 			lines++;		
 			words += line.split("\\s+").length; 
+			String codeLine = "";
 					
-			if (	!line.isEmpty() && 
+			if (	(countCode || countComments || calcHalstead) &&
+					!line.isEmpty() && 
 					(ext.equals(".c") || 
 					ext.equals(".java") || 
 					ext.equals(".cpp") || 
 					ext.equals(".h") || 
-					ext.equals(".hpp"))) {
-					//Halstead Metrics
-					StringTokenizer tok = new StringTokenizer(line);
-					
-				
+					ext.equals(".hpp"))) {					
 					//Count code and Comments
 					if (currentlyBlockComment && !line.contains("*/")) linesOfComment++; 
 						else if (line.contains("/*")) { //Does this line have a self-contained comment /*like this*/
 							linesOfComment++; 		
-							String before = line.substring(0, line.indexOf('*')).trim(),
+							String before = line.substring(0, line.indexOf('*') - 1).trim(),
 									after = "";
 							if (line.contains("*/")) {
-								after = line.substring(line.lastIndexOf("*/"));
+								after = line.substring(line.lastIndexOf("*/") + 2).trim();
 							} else currentlyBlockComment = true;
-							if (before.length() > 1) linesOfCode++; //Are there contents before the comment?
-							else if (after.length() > 2) linesOfCode++; //Are there contents after the comment?
+							if (before.length() > 1) { 
+								linesOfCode++; //Are there contents before the comment?
+								codeLine = before;
+							}
+							else if (after.length() > 2) {
+								codeLine = after;
+								linesOfCode++; //Are there contents after the comment?
+							}
 					} else if (line.contains("*/")) {
 							linesOfComment++;
 							currentlyBlockComment = false;
-							String after = line.substring(line.lastIndexOf("*/"));
-							if (after.length() > 2) linesOfCode++; //Are there contents after the comment?
+							String after = line.substring(line.lastIndexOf("*/") + 2).trim();
+							if (after.length() > 2) {
+								codeLine = after;
+								linesOfCode++; //Are there contents after the comment?
+							}
 					}
 					else if (line.contains("//")) {
 						linesOfComment++;
 						String before = line.substring(0, line.indexOf("//")).trim();
 								
-						if (before.length() > 1) linesOfCode++;
-					} else linesOfCode++;				
+						if (before.length() > 1) {
+							codeLine = before;
+							linesOfCode++;
+						}
+					} else  {
+						linesOfCode++;	
+						codeLine = line;
+					}
 			} 
+			
+			//Halstead Metrics
+
+			if (calcHalstead && !currentlyBlockComment && codeLine.length() > 1) {
+				//break into tokens
+				//for each token:
+				//	if operator, add to operators, increment totalOperators
+				//  if operand, add to operands, increment totalOperands
+				
+			}
 			
 			try { //Get next line; if null the loop breaks here
 				line = reader.readLine();
