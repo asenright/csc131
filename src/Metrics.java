@@ -230,7 +230,7 @@ public class Metrics implements Runnable{
 		formattedPrint(toPrint.lines, toPrint.words, toPrint.chars, toPrint.linesOfCode, toPrint.linesOfComment, 
 					toPrint.nodeTotalOperators, toPrint.nodeTotalOperands, toPrint.uniqueOperators.size(), toPrint.uniqueOperands.size(),
 					toPrint.vocabulary, toPrint.length, toPrint.calcLength, toPrint.volume, toPrint.difficulty, toPrint.effort,
-					toPrint.time, toPrint.bugs,
+					toPrint.bugs, toPrint.time, 
 					toPrint.file.getName());
 	}
 	
@@ -242,7 +242,7 @@ public class Metrics implements Runnable{
 		formattedPrint(toPrint.totalLines, toPrint.totalWords, toPrint.totalChars, toPrint.totalCode, toPrint.totalComments, 
 				toPrint.totalOperators, toPrint.totalOperands, toPrint.totalUniqueOperators, toPrint.totalUniqueOperands,
 				toPrint.totalVocab, toPrint.totalLength, toPrint.totalCalcLength, toPrint.totalVolume, toPrint.totalDifficulty, 
-				toPrint.totalEffort, toPrint.totalTime, toPrint.totalBugs,
+				toPrint.totalEffort, toPrint.totalBugs, toPrint.totalTime,
 				"total" );
 }
 	
@@ -460,14 +460,14 @@ public class Metrics implements Runnable{
 				length = nodeTotalOperators + nodeTotalOperands;
 				calcLength = uniqueOperators.size() * log2(uniqueOperators.size()) + uniqueOperands.size()*log2(uniqueOperands.size());
 				volume = nodeTotalOperators * log2(vocabulary);
-				difficulty = uniqueOperands.size() > 0 ? (uniqueOperators.size() / 2) * (nodeTotalOperands / uniqueOperands.size()) : 0;
-				effort = volume > 0 ? difficulty/volume : 0;
+				difficulty = uniqueOperands.size() > 0 ? ((uniqueOperators.size() / 2) * (nodeTotalOperands / uniqueOperands.size()) ): 0;
+				effort = difficulty*volume;
 				time = effort / 18;
 				bugs = volume > 0 ? (volume / 3000) :  0 ;
 				
-				System.out.println(	"Code: " + codeLine + 
-						"\n	Operators: " + uniqueOperators.toString() + 
-				     	"\n	Operands: " + uniqueOperands.toString());
+				//System.out.println(	"Code: " + codeLine + 
+				//		"\n	Operators: " + uniqueOperators.toString() + 
+				//     	"\n	Operands: " + uniqueOperands.toString());
 		}
 		
 	
