@@ -193,19 +193,19 @@ public class Metrics implements Runnable{
 	 * Master print method, used for printing individual node metrics as well as the total.
 	 */
 	private void formattedPrint(Integer lines, Integer words, Integer chars, Integer linesCode, Integer linesComment, 
-						Integer totalOperators, Integer totalOperands, Integer uniqueOperators, Integer uniqueOperands,
+						Integer operators, Integer operands, Integer uniqueOperators, Integer uniqueOperands,
 						Integer vocab, Integer length, Integer totalCalcLength, Integer volume, Integer difficulty, Integer effort,
 						Integer bugs, Integer time,
 						String filename) {
-		if (countLines) printMetric(COLUMN_LINES, totalLines);
-		if (countWords) printMetric(COLUMN_WORDS, totalWords);
-		if (countChars) printMetric(COLUMN_CHARS, totalChars);
+		if (countLines) printMetric(COLUMN_LINES, lines);
+		if (countWords) printMetric(COLUMN_WORDS, words);
+		if (countChars) printMetric(COLUMN_CHARS, chars);
 		
-		if (countCode) printCodeMetric(COLUMN_SOURCE, totalCode);
-		if (countComments) printCodeMetric(COLUMN_COMMENTS, totalCode);
+		if (countCode) printCodeMetric(COLUMN_SOURCE, linesCode);
+		if (countComments) printCodeMetric(COLUMN_COMMENTS, linesComment);
 		if (calcHalstead) {
-			printCodeMetric(COLUMN_OPERATORS, totalOperators);
-			printCodeMetric(COLUMN_OPERANDS, totalOperands);
+			printCodeMetric(COLUMN_OPERATORS, operators);
+			printCodeMetric(COLUMN_OPERANDS, operands);
 			printCodeMetric(COLUMN_UNIQUE_OPERATORS, uniqueOperators);
 			printCodeMetric(COLUMN_UNIQUE_OPERANDS, uniqueOperands);
 
@@ -293,6 +293,7 @@ public class Metrics implements Runnable{
 				while (reader.read() > -1)
 					chars++;
 				reader.close();
+				
 				reader = new BufferedReader(new FileReader(file)); //Reset reader to start reading lines
 				line = reader.readLine();
 				while (line != null) { 		
@@ -433,9 +434,6 @@ public class Metrics implements Runnable{
 				  	}
 			   }
 		
-				System.out.println(	"Code: " + codeLine + 
-						"\n	Operators: " + uniqueOperators.toString() + 
-						"\n	Operands: " + uniqueOperands.toString());
 				vocabulary = uniqueOperators.size() + uniqueOperands.size();
 				length = nodeTotalOperators + nodeTotalOperands;
 				calcLength = uniqueOperators.size() * log2(uniqueOperators.size()) + uniqueOperands.size()*log2(uniqueOperands.size());
@@ -444,6 +442,9 @@ public class Metrics implements Runnable{
 				effort = volume > 0 ? difficulty/volume : 0;
 				time = effort / 18;
 				bugs = volume > 0 ? (volume / 3000) :  0 ;
+				//System.out.println(	"Code: " + codeLine + 
+				//		"\n	Operators: " + uniqueOperators.toString() + 
+				//		"\n	Operands: " + uniqueOperands.toString());
 		}
 		
 	
