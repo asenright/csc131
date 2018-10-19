@@ -247,23 +247,23 @@ public class Metrics implements Runnable{
 }
 	
 	/** Printing helper method for managing column width.
-	 * @param totalToMeasure Integer in column
 	 * @param minimumWidth Narrowest column width returnable, usually the label width
+	 * @param totalToMeasure Integer in column
 	 * @return
 	 */
-	private int getColumnWidth(int totalToMeasure, int minimumWidth) {		
-		return Math.max(new Integer(totalLines).toString().length(), minimumWidth) + COLUMN_SEP_WIDTH;
+	private int getColumnWidth(int minimumWidth, int totalToMeasure) {		
+		return Math.max(new Integer(totalToMeasure).toString().length(), minimumWidth) + COLUMN_SEP_WIDTH;
 	}
 	
 	private void printHeader(String columnName, int metricTotal) {
-		System.out.printf("%"+ getColumnWidth(metricTotal, columnName.length()) +"s", columnName);
+		System.out.printf("%"+ getColumnWidth(columnName.length() , metricTotal) +"s", columnName);
 	}
 	private void printMetric(String columnName, int metric) {
-		System.out.printf("%"+ getColumnWidth(metric, columnName.length()) + "s", new Integer(metric).toString());
+		System.out.printf("%"+ getColumnWidth(columnName.length(), metric) + "s", new Integer(metric).toString());
 	}
 
 	private void printCodeMetric(String columnName, int metric) {
-		System.out.printf("%"+ getColumnWidth(metric, columnName.length()) + "s", metric > 0 ? new Integer(metric).toString() : "");
+		System.out.printf("%"+ getColumnWidth(columnName.length(), metric) + "s", metric > 0 ? new Integer(metric).toString() : "");
 	}
 	
 
