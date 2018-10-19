@@ -55,4 +55,6 @@ for Dr. Posnett, CSU Sacramento, Fall 2018
 	to get just lines of code, and use regex matchers to sort these codeLines into tokens (one set for operators, one set for operands).
 	Then add the number of tokens to total operators/operands, and the tokens themselves into the sets of unique operators and operands.
 	Halstead metrics are calculated from those four primitives.
+	Design for Halstead calculations in C and Java can be found at https://www.scribd.com/doc/99533/Halstead-s-Operators-and-Operands-in-C-C-JAVA-by-Indranil-Nandy
+
 	
