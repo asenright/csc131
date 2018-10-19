@@ -38,7 +38,9 @@ public class Metrics implements Runnable{
 								COLUMN_CALC_LENGTH = "calcLength",
 								COLUMN_VOLUME = "volume",
 								COLUMN_DIFFICULTY = "difficulty",
-								COLUMN_EFFORT = "effort";
+								COLUMN_EFFORT = "effort",
+								COLUMN_BUGS = "estBugs",
+								COLUMN_TIME = "estTime";
 
 	@Option(description = "Show usage", names = { "-h" }, paramLabel="help")
 	static boolean showHelp;
@@ -66,7 +68,8 @@ public class Metrics implements Runnable{
 		
 	private int totalLines, totalChars, totalWords, totalCode, totalComments, totalUniqueOperands, 
 		totalUniqueOperators, totalOperands, totalOperators,
-		totalEffort, totalVocab, totalLength, totalCalcLength, totalVolume, totalDifficulty;
+		totalEffort, totalVocab, totalLength, totalCalcLength, totalVolume, totalDifficulty, 
+		totalBugs, totalTime;
 
 	private LinkedList<metricsFileNode> listHead = null;	
 	
@@ -110,8 +113,8 @@ public class Metrics implements Runnable{
 			totalLines += lastListItem.lines;
 			totalCode += lastListItem.linesOfCode;
 			totalComments += lastListItem.linesOfComment;
-			totalOperators += lastListItem.totalOperators;
-			totalOperands += lastListItem.totalOperands;
+			totalOperators += lastListItem.nodeTotalOperators;
+			totalOperands += lastListItem.nodeTotalOperands;
 			totalUniqueOperators += lastListItem.uniqueOperators.size();
 			totalUniqueOperands += lastListItem.uniqueOperands.size();
 			totalEffort  += lastListItem.effort;
@@ -120,6 +123,8 @@ public class Metrics implements Runnable{
 			totalCalcLength  += lastListItem.calcLength;
 			totalVolume += lastListItem.volume;
 			totalDifficulty  += lastListItem.difficulty;
+			totalBugs += lastListItem.bugs;
+			totalTime += lastListItem.time;
 		}
 	}
 	
@@ -177,6 +182,8 @@ public class Metrics implements Runnable{
 			printHeader(COLUMN_VOLUME, totalVolume);	
 			printHeader(COLUMN_DIFFICULTY, totalDifficulty);	
 			printHeader(COLUMN_EFFORT, totalEffort);	
+			printHeader(COLUMN_TIME, totalTime);	
+			printHeader(COLUMN_BUGS, totalBugs);	
 		}
 		System.out.printf(" %-20s%n", "filename");
 	}
@@ -188,6 +195,7 @@ public class Metrics implements Runnable{
 	private void formattedPrint(Integer lines, Integer words, Integer chars, Integer linesCode, Integer linesComment, 
 						Integer totalOperators, Integer totalOperands, Integer uniqueOperators, Integer uniqueOperands,
 						Integer vocab, Integer length, Integer totalCalcLength, Integer volume, Integer difficulty, Integer effort,
+						Integer bugs, Integer time,
 						String filename) {
 		if (countLines) printMetric(COLUMN_LINES, totalLines);
 		if (countWords) printMetric(COLUMN_WORDS, totalWords);
@@ -208,6 +216,9 @@ public class Metrics implements Runnable{
 			printCodeMetric(COLUMN_DIFFICULTY, difficulty);
 			printCodeMetric(COLUMN_EFFORT, effort);
 			
+			printCodeMetric(COLUMN_TIME, time);
+			printCodeMetric(COLUMN_BUGS, bugs);
+			
 		}
 		System.out.printf(" %s%n", filename);
 	}
@@ -217,8 +228,9 @@ public class Metrics implements Runnable{
 	 */
 	private void formattedPrint(metricsFileNode toPrint) {
 		formattedPrint(toPrint.lines, toPrint.words, toPrint.chars, toPrint.linesOfCode, toPrint.linesOfComment, 
-					toPrint.totalOperators, toPrint.totalOperands, toPrint.uniqueOperators.size(), toPrint.uniqueOperands.size(),
+					toPrint.nodeTotalOperators, toPrint.nodeTotalOperands, toPrint.uniqueOperators.size(), toPrint.uniqueOperands.size(),
 					toPrint.vocabulary, toPrint.length, toPrint.calcLength, toPrint.volume, toPrint.difficulty, toPrint.effort,
+					toPrint.time, toPrint.bugs,
 					toPrint.file.getName());
 	}
 	
@@ -230,7 +242,7 @@ public class Metrics implements Runnable{
 		formattedPrint(toPrint.totalLines, toPrint.totalWords, toPrint.totalChars, toPrint.totalCode, toPrint.totalComments, 
 				toPrint.totalOperators, toPrint.totalOperands, toPrint.totalUniqueOperators, toPrint.totalUniqueOperands,
 				toPrint.totalVocab, toPrint.totalLength, toPrint.totalCalcLength, toPrint.totalVolume, toPrint.totalDifficulty, 
-				toPrint.totalEffort, 
+				toPrint.totalEffort, toPrint.totalTime, toPrint.totalBugs,
 				"total" );
 }
 	
@@ -260,8 +272,8 @@ public class Metrics implements Runnable{
 	 */
 	class metricsFileNode {
 	
-		int lines, chars, words, linesOfCode, linesOfComment, totalOperators, totalOperands,
-			vocabulary, length, calcLength, volume, difficulty, effort;
+		int lines, chars, words, linesOfCode, linesOfComment, nodeTotalOperators, nodeTotalOperands,
+			vocabulary, length, calcLength, volume, difficulty, effort, time, bugs;
 		Set<String> uniqueOperators = new HashSet<String>(), uniqueOperands = new HashSet<String>();
 		File file;
 		metricsFileNode next = null;
@@ -355,24 +367,54 @@ public class Metrics implements Runnable{
 		
 		
 		//Halstead Metrics
-		
 		if (calcHalstead && !currentlyBlockComment && codeLine.length() > 1) {
-			Set<String> keywords = new HashSet<String>(Arrays.asList("one", "of",
-					"abstract", "continue", "for", "new", "switch",
-					"assert", "default", "if", "package", "synchronized",
-					"boolean", "do", "goto", "private", "this",
-					"break", "double", "implements", "protected", "throw",
-					"byte", "else", "import", "public", "throws",
-					"case", "enum", "instanceof", "return", "transient",
-					"catch", "extends", "int", "short", "try",
-					"char", "final", "interface", "static", "void",
-					"class", "finally", "long", "strictfp", "volatile",
-					"const", "float", "native", "super", "while"));
-		    String operatorsRegex = "(=)|(>)|(<)|(!)|(~)|(/?)|(:)|(==)|(<=)|(>=)|(!=)|(&&)|(/|/|)|(/+/+)|(--)|(/+)|(-)|(/*)|(/)|(&)|(/|)|(^)|(%)|(<<)|(>>)|(>>>)|(/+=)|(-=)|(/*=)|(/=)|(&=)|(/|=)|(^=)|(%=)|(<<=)|(>>=)|(>>>=)"; 
+			Set<String> keywords = new HashSet<String>();
+			String operatorsRegex;
+			String operandsRegex;
+			switch (ext) {
+				case ".java" :
+				case ".javah" : 
+					keywords = new HashSet<String>(Arrays.asList("one", "of",
+							"abstract", "continue", "for", "new", "switch",
+							"assert", "default", "if", "package", "synchronized",
+							"boolean", "do", "goto", "private", "this",
+							"break", "double", "implements", "protected", "throw",
+							"byte", "else", "import", "public", "throws",
+							"case", "enum", "instanceof", "return", "transient",
+							"catch", "extends", "int", "short", "try",
+							"char", "final", "interface", "static", "void",
+							"class", "finally", "long", "strictfp", "volatile",
+							"const", "float", "native", "super", "while"));
+					break;
+				case ".c":
+				case ".h":
+					keywords = new HashSet<String>(Arrays.asList("auto","break","case","char","const","continue","default","do","double","else"	,"enum"	,"extern","float"	,"for"
+							,"goto"	,"if","int"	,"long"	,"register"	,"return","short",
+							"signed","sizeof","static","struct"	,"switch"	,"typedef"	,"union",
+							"unsigned","void"	,"volatile"	,"while"));
+					break;
+				
+				case ".cpp":
+				case ".hpp":
+					keywords = new HashSet<String>(Arrays.asList("one", "of",
+							"abstract", "continue", "for", "new", "switch",
+							"assert", "default", "if", "package", "synchronized",
+							"boolean", "do", "goto", "private", "this",
+							"break", "double", "implements", "protected", "throw",
+							"byte", "else", "import", "public", "throws",
+							"case", "enum", "instanceof", "return", "transient",
+							"catch", "extends", "int", "short", "try",
+							"char", "final", "interface", "static", "void",
+							"class", "finally", "long", "strictfp", "volatile",
+							"const", "float", "native", "super", "while"));
+					break;
+			}
+			
+		    operatorsRegex = "/?/?";
+		    		//"(=)|(>)|(<)|(!)|(~)|(/?)|(:)|(==)|(<=)|(>=)|(!=)|(&&)|(/|/|)|(/+/+)|(--)|(/+)|(-)|(/*)|(/)|(&)|(/|)|(^)|(%)|(<<)|(>>)|(>>>)|(/+=)|(-=)|(/*=)|(/=)|(&=)|(/|=)|(^=)|(%=)|(<<=)|(>>=)|(>>>=)"; 
 		    //Keywords and ops regex shamelessly borrowed from https://www.daniweb.com/programming/software-development/threads/307653/halstead-metrics
-		    String operandsRegex = "(\\w+)|(\\d+)";
-		    
-		    
+		    operandsRegex = "(\\w+)|(\\d+)";
+
 		    Matcher operatorsMatcher = Pattern.compile(operatorsRegex).matcher(codeLine);
 		    Matcher operandsMatcher = Pattern.compile(operandsRegex).matcher(codeLine);
 		
@@ -380,14 +422,14 @@ public class Metrics implements Runnable{
 				  	String group = operatorsMatcher.group();
 				  	if (group.length() > 0) {
 				       uniqueOperators.add(group);
-				       totalOperators++;
+				       nodeTotalOperators++;
 				  	}
 			   }
 			  while (operandsMatcher.find()) {
 				   String group = operandsMatcher.group();
 			       if (group.length() > 0  && !keywords.contains(group)) {
 				       uniqueOperands.add(group);
-				       totalOperands++;
+				       nodeTotalOperands++;
 				  	}
 			   }
 		
@@ -395,11 +437,13 @@ public class Metrics implements Runnable{
 						"\n	Operators: " + uniqueOperators.toString() + 
 						"\n	Operands: " + uniqueOperands.toString());
 				vocabulary = uniqueOperators.size() + uniqueOperands.size();
-				length = totalOperators + totalOperands;
+				length = nodeTotalOperators + nodeTotalOperands;
 				calcLength = uniqueOperators.size() * log2(uniqueOperators.size()) + uniqueOperands.size()*log2(uniqueOperands.size());
-				volume = totalOperators * log2(vocabulary);
-				difficulty = uniqueOperands.size() > 0 ? (uniqueOperators.size() / 2) * (totalOperands / uniqueOperands.size()) : 0;
+				volume = nodeTotalOperators * log2(vocabulary);
+				difficulty = uniqueOperands.size() > 0 ? (uniqueOperators.size() / 2) * (nodeTotalOperands / uniqueOperands.size()) : 0;
 				effort = volume > 0 ? difficulty/volume : 0;
+				time = effort / 18;
+				bugs = volume > 0 ? (volume / 3000) :  0 ;
 		}
 		
 	
