@@ -23,8 +23,10 @@ public class MetricsFileNode {
 		if (!file.exists()) throw new IllegalArgumentException("No file found matching '" + file.getName() + "'");
 		
 		ext = getFileExtension(file);
+		getFileMetrics();
+	}
+	private void getFileMetrics() {
 		String line = null;
-		
 		BufferedReader reader = null;
 		try {
 			reader = new BufferedReader(new FileReader(file));
