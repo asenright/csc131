@@ -87,6 +87,4 @@ public class MetricsLib {
 				getFileExtension(filePath).equals(".java")||
 				getFileExtension(filePath).equals(".javah"));
 	};
-	
-	
 }

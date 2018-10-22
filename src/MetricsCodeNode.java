@@ -89,7 +89,6 @@ public class MetricsCodeNode extends MetricsFileNode {
 			operatorsRegex = "(=)|(>)|(<)|(!)|(~)|(/?)|(:)|(==)|(<=)|(>=)|(!=)|(&&)|(/|/|)|(/+/+)|(--)|(/+)|(-)|(/*)|(/)|(&)|(/|)|(^)|(%)|(<<)|(>>)|(>>>)|(/+=)|(-=)|(/*=)|(/=)|(&=)|(/|=)|(^=)|(%=)|(<<=)|(>>=)|(>>>=)";
 		    //Keywords and ops regex shamelessly borrowed from https://www.daniweb.com/programming/software-development/threads/307653/halstead-metrics
 		    operandsRegex = "(\\w+)|(\\d+)";
-		    for (String word : includedOperators) operandsRegex += "|(" + word + ")";
 		
 		    Matcher operatorsMatcher = Pattern.compile(operatorsRegex).matcher(codeLine);
 		    Matcher operandsMatcher = Pattern.compile(operandsRegex).matcher(codeLine);
@@ -103,19 +102,20 @@ public class MetricsCodeNode extends MetricsFileNode {
 			   }
 			  while (operandsMatcher.find()) {
 				   String group = operandsMatcher.group();
-				   if (includedOperators.contains(group)) {
+				   if (group.length() == 0) continue;
+				   else if (includedOperators.contains(group)) {
 					   uniqueOperators.add(group);
 					   nodeTotalOperators++;
 				   }
-			       if (group.length() > 0  && !excludedOperands.contains(group)) { // per doc referenced in Design, reserved words are not operands for H-metrics
+				   else if (!excludedOperands.contains(group)) { // per doc referenced in Design, reserved words are not operands for H-metrics
 				       uniqueOperands.add(group);
 				       nodeTotalOperands++;
 				  	}
 			   }
 	
-				//System.out.println(	"Code: " + codeLine + 
-				//		"\n	Operators: " + uniqueOperators.toString() + 
-				//     	"\n	Operands: " + uniqueOperands.toString());
+				System.out.println(	"Code: " + codeLine + 
+						"\n	Operators: " + uniqueOperators.toString() + 
+				     	"\n	Operands: " + uniqueOperands.toString());
 			}
 		}
 		private void deriveHalsteads() {
