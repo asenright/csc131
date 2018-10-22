@@ -10,26 +10,27 @@ import java.io.File;
 *  Credit to https://www.geeksforgeeks.org/print-unique-words-string/ for unique words in string
 */
 
-public class Metrics implements IMetrics {
+public class SourceMetrics implements IMetrics {
 		protected String filePath;
-		protected MetricsFileNode metricsNode = null;	
+		protected MetricsCodeNode metricsNode = null;	
 	
 	    public boolean setPath(String path) {
-	    	filePath = path;
+	    	this.filePath = path;
 	    	try {
-	    		metricsNode = new MetricsFileNode(new File(path));
+	    		this.metricsNode = new MetricsCodeNode(new File(path));
+	    		
 	    	} catch (Exception e) {
-	    		System.out.println("Could not create metricsFileNode!");
+	    		System.out.println("Could not create metricsCodeNode!");
 	    		e.printStackTrace();
 	    	}
 	    	return metricsNode.file.exists();
 	    }
     
-		    // returns true if current path is valid
 	    public boolean isSource() {
-			return false;
-		};
-		
+			return true;
+		};             // returns true if the file is a source file
+		// basic counts for any file
+		//
 		 public int getLineCount() {
 			return metricsNode.lines;
 		};
@@ -41,49 +42,51 @@ public class Metrics implements IMetrics {
 		 };
 		
 		// source code line counts
+		//
 		 public int getSourceLineCount() {
-			 return 0;
+			 return metricsNode.linesOfCode;
 		 };
 		 public int getCommentLineCount() {
-			 return 0;
+			 return metricsNode.linesOfComment;
 		 };
 		
 		// Halstead metrics
+		//
 		 public int getHalsteadn1() {
-			 return 0;
+			 return metricsNode.nodeTotalOperands;
 		 };            // number of distinct operands
 		 public int getHalsteadn2() {
-			 return 0;
+			 return metricsNode.nodeTotalOperators;
 		 };            // number of distinct operators
 		 public int getHalsteadN1() {
-			 return 0;
+			 return metricsNode.uniqueOperands == null ? 0 : metricsNode.uniqueOperands.size();
 		 };            // number of operands
 		 public int getHalsteadN2(){
-			 return 0;
+			 return metricsNode.uniqueOperators == null ? 0 : metricsNode.uniqueOperators.size();
 		 };            // number of operators
 		
 		 public int getHalsteadVocabulary() {
-			 return 0;
+			 return metricsNode.vocabulary;
 		 };
 		 public int getHalsteadProgramLength() {
-			 return 0;
+			 return metricsNode.length;
 		 };
 		 public int getHalsteadCalculatedProgramLenght() {
-			 return 0;
+			 return metricsNode.calcLength;
 		 };
 		 public int getHalsteadVolume() {
-			 return 0;
+			 return metricsNode.volume;
 		 };
 		 public int getHalsteadDifficulty() {
-			 return 0;
+			 return metricsNode.difficulty;
 		 };
 		 public int getHalsteadEffort() {
-			 return 0;
+			 return metricsNode.effort;
 		 };
 		 public int getHalsteadTime() {
-			 return 0;
+			 return metricsNode.time;
 		 };
 		 public int getHalsteadBugs() {
-			 return 0;
+			 return metricsNode.bugs;
 		 };
-}
+ }

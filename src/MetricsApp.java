@@ -8,14 +8,9 @@
 *  Credit to https://www.geeksforgeeks.org/print-unique-words-string/ for unique words in string
 */
 import java.io.*;
-import java.util.Arrays;
-import java.util.HashSet;
+
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
-import java.util.StringTokenizer;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import picocli.CommandLine;
 import picocli.CommandLine.*;
@@ -137,7 +132,9 @@ public class MetricsApp implements Runnable{
 	 */
 	private void populateMetricsList(List<String> filePaths, LinkedList<IMetrics> listHead) throws FileNotFoundException {
 		for (String current : filePaths) {
-				IMetrics tmp = new Metrics();
+				IMetrics tmp;
+				if (MetricsLib.isSource(current)) tmp = new Metrics();
+				else tmp = new SourceMetrics();
 				tmp.setPath(current);
 				listHead.add(tmp);
 			}	
@@ -226,7 +223,7 @@ public class MetricsApp implements Runnable{
 					toPrint.getHalsteadEffort(),
 					toPrint.getHalsteadBugs(), 
 					toPrint.getHalsteadTime(), 
-					((Metrics) toPrint).item.file.getPath());
+					((Metrics) toPrint).metricsNode.file.getPath());
 	}
 	
 	
