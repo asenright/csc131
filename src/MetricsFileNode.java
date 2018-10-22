@@ -8,15 +8,16 @@ import java.io.IOException;
 public class MetricsFileNode {
 	
 	int lines, chars, words;
-	
+	protected String ext;
 	protected File file;
 	
 	public MetricsFileNode(File toCount) {
+		ext = MetricsLib.getFileExtension(toCount);
 		this.file = toCount;
 		if (!file.exists()) throw new IllegalArgumentException("No file found matching '" + file.getName() + "'");
-		getFileMetrics();
+
 	}
-	private void getFileMetrics() {
+	protected void getFileMetrics() {
 		String line = null;
 		BufferedReader reader = null;
 		try {

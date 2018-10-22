@@ -18,6 +18,7 @@ public class Metrics implements IMetrics {
 	    	filePath = path;
 	    	try {
 	    		metricsNode = new MetricsFileNode(new File(path));
+	    		metricsNode.getFileMetrics();
 	    	} catch (Exception e) {
 	    		System.out.println("Could not create metricsFileNode!");
 	    		e.printStackTrace();

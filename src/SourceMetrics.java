@@ -15,10 +15,10 @@ public class SourceMetrics implements IMetrics {
 		protected MetricsCodeNode metricsNode = null;	
 	
 	    public boolean setPath(String path) {
-	    	this.filePath = path;
+	    	filePath = path;
 	    	try {
 	    		this.metricsNode = new MetricsCodeNode(new File(path));
-	    		
+	    		metricsNode.getFileMetrics();
 	    	} catch (Exception e) {
 	    		System.out.println("Could not create metricsCodeNode!");
 	    		e.printStackTrace();

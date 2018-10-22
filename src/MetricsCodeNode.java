@@ -10,22 +10,18 @@ import java.util.Set;
 
 public class MetricsCodeNode extends MetricsFileNode {
 	private boolean currentlyBlockComment;
-	private String ext;
+	
 	int linesOfCode, linesOfComment, nodeTotalOperators, nodeTotalOperands,
 		vocabulary, length, calcLength, volume, difficulty, effort, time, bugs;
 	Set<String> uniqueOperators = new HashSet<String>(), uniqueOperands = new HashSet<String>();
 	
 	public MetricsCodeNode(File toCount) {
-		super(toCount);
-		ext = MetricsLib.getFileExtension(toCount);
-		currentlyBlockComment = false;
-		// TODO Auto-generated constructor stub
+		super(toCount);	
 	}
 	
 	protected void getLineMetrics(String line) {
 		super.getLineMetrics(line);
 		getCodeLineMetrics(line);
-		
 	}
 	
 	private void getCodeLineMetrics(String line) {

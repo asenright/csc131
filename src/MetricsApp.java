@@ -133,8 +133,8 @@ public class MetricsApp implements Runnable{
 	private void populateMetricsList(List<String> filePaths, LinkedList<IMetrics> listHead) throws FileNotFoundException {
 		for (String current : filePaths) {
 				IMetrics tmp;
-				if (MetricsLib.isSource(current)) tmp = new Metrics();
-				else tmp = new SourceMetrics();
+				if (MetricsLib.isSource(current)) tmp = new SourceMetrics();
+				else tmp = new Metrics();
 				tmp.setPath(current);
 				listHead.add(tmp);
 			}	
@@ -206,6 +206,12 @@ public class MetricsApp implements Runnable{
 	 * @param toPrint Node whose metrics we want to print.
 	 */
 	private void formattedPrint(IMetrics toPrint) {
+		String path = "";
+		try {
+			path = ((Metrics) toPrint).metricsNode.file.getPath();
+		} catch (Exception e){
+			path = ((SourceMetrics) toPrint).metricsNode.file.getPath();
+		}
 		formattedPrint(toPrint.getLineCount(), 
 					toPrint. getWordCount(), 
 					toPrint.getCharacterCount(), 
@@ -223,7 +229,7 @@ public class MetricsApp implements Runnable{
 					toPrint.getHalsteadEffort(),
 					toPrint.getHalsteadBugs(), 
 					toPrint.getHalsteadTime(), 
-					((Metrics) toPrint).metricsNode.file.getPath());
+					path);
 	}
 	
 	
