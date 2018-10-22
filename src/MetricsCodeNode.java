@@ -1,12 +1,8 @@
 import java.io.File;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 
 public class MetricsCodeNode extends MetricsFileNode {
 	private boolean currentlyBlockComment;
@@ -71,7 +67,6 @@ public class MetricsCodeNode extends MetricsFileNode {
 
 		if (!currentlyBlockComment && codeLine.length() > 1) {
 			Set<String> excludedOperands = new HashSet<String>(), includedOperators = new HashSet<String>();
-			
 			String operatorsRegex;
 			String operandsRegex;
 			switch (ext) {
