@@ -15,7 +15,7 @@ import java.util.List;
 import picocli.CommandLine;
 import picocli.CommandLine.*;
 
-/*Wrapper class for Metrics*/
+/*UI Wrapper class for Metrics*/
 @Command(description="Prints metrics of the given file to STDOUT.",	name="Metrics")
 public class MetricsApp implements Runnable{
 	@Option(description = "Show usage", names = { "-h" }, paramLabel="help")
@@ -122,8 +122,6 @@ public class MetricsApp implements Runnable{
 			totalTime += lastListItem.getHalsteadTime();
 		}
 	}
-	
-	
 
 	/** Populates a linkedList of MetricsFileNodes with the given List of filePaths.
 	 * @param filePaths List of filePaths.
@@ -206,7 +204,7 @@ public class MetricsApp implements Runnable{
 	 * @param toPrint Node whose metrics we want to print.
 	 */
 	private void formattedPrint(IMetrics toPrint) {
-		String path = "";
+		String path = ""; //TODO: I'd really like to add a getPath() call to IMetrics to get rid of this messy try/catch!
 		try {
 			path = ((Metrics) toPrint).metricsNode.file.getPath();
 		} catch (Exception e){
