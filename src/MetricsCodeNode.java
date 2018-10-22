@@ -118,7 +118,6 @@ public class MetricsCodeNode extends MetricsFileNode {
 				  	}
 			   }
 	
-			  deriveHalsteads();
 				//System.out.println(	"Code: " + codeLine + 
 				//		"\n	Operators: " + uniqueOperators.toString() + 
 				//     	"\n	Operands: " + uniqueOperands.toString());
