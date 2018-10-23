@@ -58,3 +58,9 @@ for Dr. Posnett, CSU Sacramento, Fall 2018
 	Design for Halstead calculations in C and Java can be found at https://www.scribd.com/doc/99533/Halstead-s-Operators-and-Operands-in-C-C-JAVA-by-Indranil-Nandy
 
 	
+/////////IMetrics Interface///////////
+	With the implementation of the IMetrics interface, the app is split into components. 
+	One component, MetricsApp, now handles command-line frontend.
+	Another component, Metrics, implements the IMetrics interface and accesses FileNode metrics.
+	FileNode and CodeNode are the backend, and where individial file metrics are gathered.
+	MetricsLib contains functions and data structures that don't fit better elsewhere.
