@@ -25,7 +25,9 @@ public class Metrics implements IMetrics {
 	    	}
 	    	return metricsNode.file.exists();
 	    }
-    
+	    public String getPath() {
+	    	return filePath;
+	    }
 		    // returns true if current path is valid
 	    public boolean isSource() {
 			return false;

@@ -3,7 +3,7 @@ interface IMetrics {
     boolean setPath(String path);   // sets the file path to process
                                     // returns true if current path is valid
     boolean isSource();             // returns true if the file is a source file
-
+    String getPath(); 				// gets path back later
     // basic counts for any file
     //
     int getLineCount();

@@ -113,9 +113,9 @@ public class MetricsCodeNode extends MetricsFileNode {
 				  	}
 			   }
 	
-				System.out.println(	"Code: " + codeLine + 
-						"\n	Operators: " + uniqueOperators.toString() + 
-				     	"\n	Operands: " + uniqueOperands.toString());
+			//	System.out.println(	"Code: " + codeLine + 
+				//		"\n	Operators: " + uniqueOperators.toString() + 
+				  //   	"\n	Operands: " + uniqueOperands.toString());
 			}
 		}
 		private void deriveHalsteads() {
