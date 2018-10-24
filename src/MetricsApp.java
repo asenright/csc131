@@ -204,12 +204,6 @@ public class MetricsApp implements Runnable{
 	 * @param toPrint Node whose metrics we want to print.
 	 */
 	private void formattedPrint(IMetrics toPrint) {
-		String path = ""; //TODO: I'd really like to add a getPath() call to IMetrics to get rid of this messy try/catch!
-		try {
-			path = ((Metrics) toPrint).metricsNode.file.getPath();
-		} catch (Exception e){
-			path = ((SourceMetrics) toPrint).metricsNode.file.getPath();
-		}
 		formattedPrint(toPrint.getLineCount(), 
 					toPrint. getWordCount(), 
 					toPrint.getCharacterCount(), 
@@ -227,7 +221,7 @@ public class MetricsApp implements Runnable{
 					toPrint.getHalsteadEffort(),
 					toPrint.getHalsteadBugs(), 
 					toPrint.getHalsteadTime(), 
-					path);
+					toPrint.getPath());
 	}
 	
 	
@@ -261,9 +255,5 @@ public class MetricsApp implements Runnable{
 	private void printCodeMetric(String columnName, int metric) {
 		System.out.printf("%"+ getColumnWidth(columnName.length(), metric) + "s", metric > 0 ? new Integer(metric).toString() : "");
 	}
-	
 
-		
-	/** Metrics File Node class. Give it a file and it'll automatically accumulate appropriate metrics.
-	 */
 }
